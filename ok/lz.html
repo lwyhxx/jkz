@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>健康证 - 兰州模板</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f0f4f8;padding:20px;font-family:SimHei,Microsoft YaHei,sans-serif;text-align:center;}
+.container{max-width:600px;margin:0 auto;}
+.status{text-align:center;font-size:16px;margin:12px 0;color:#555;}
+.btn-wrap{display:flex;gap:12px;justify-content:center;margin-top:12px;}
+.btn{flex:1;padding:12px 0;border:none;border-radius:12px;font-size:16px;font-weight:bold;background:#1a73e8;color:#fff;cursor:pointer;}
+.btn:disabled{background:#ccc;cursor:not-allowed;}
+.btn:active{opacity:0.9;}
+#previewModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;}
+#previewModal img{max-width:90%;max-height:80vh;border-radius:12px;}
+#previewModal .close{position:absolute;top:20px;right:20px;width:32px;height:32px;background:#fff;border-radius:50%;font-size:20px;line-height:32px;color:red;cursor:pointer;text-align:center;}
+.toast{position:fixed;top:20px;right:20px;background:#27ae60;color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:9999;font-size:14px;}
+.toast.error{background:#e74c3c;}
+.workspace{width:min(100%,1100px);display:grid;grid-template-columns:minmax(280px,360px) minmax(0,600px);gap:24px;align-items:start;text-align:left;}
+.form-panel{padding:20px;border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.form-panel h1{margin:0;color:#1f2937;font-size:22px;}
+.form-subtitle{margin-top:5px;color:#6b7280;font-size:12px;}
+.field{margin-bottom:14px;}
+.field label{display:block;margin-bottom:6px;color:#374151;font-size:14px;font-weight:600;}
+.field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;}
+.field input:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.12);}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.avatar-drop{padding:14px;border:2px dashed #bfdbfe;border-radius:10px;color:#6b7280;text-align:center;background:#eff6ff;cursor:pointer;}
+.avatar-drop.dragover{border-color:#1a73e8;color:#1d4ed8;background:#dbeafe;}
+.avatar-drop input{display:none;}
+.hint{margin-top:5px;color:#6b7280;font-size:12px;line-height:1.5;}
+.submit-btn{width:100%;margin-top:4px;}
+.preview-panel{min-width:0;}
+@media(max-width:760px){.workspace{grid-template-columns:1fr;}.preview-panel{order:-1;}.form-panel{padding:16px;}.field-grid{grid-template-columns:1fr;}}
+
+/* ---------- 卡片容器（完全还原原始尺寸与定位） ---------- */
+.cardpic {
+    width: 375px;
+    height: 448px;          /* 固定高度，防止内容被裁剪 */
+    margin: 0 auto;         /* 居中显示 */
+    position: relative;
+    overflow: hidden;
+}
+.target-box {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+/* 背景图绝对定位填满整个卡片 */
+.card-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: fill;
+}
+/* ---------- 信息文字（绝对定位，横排） ---------- */
+.ylxingming {
+    position: absolute;
+    top: 65px; left: 40px;  /* 姓名行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+.ylcongye {
+    position: absolute;
+    top: 65px; left: 180px; /* 作业类别行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+.ylbianhao {
+    position: absolute;
+    top: 90px; left: 40px;  /* 身份证号行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+.ylfazhengriqi {
+    position: absolute;
+    top: 115px; left: 40px; /* 发证日期行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+.yldaoqiriqi {
+    position: absolute;
+    top: 135px; left: 110px; /* 有效期限行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+.ylfzdw {
+    position: absolute;
+    top: 190px; left: 40px; /* 发证机构行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+.ylsuijibianhao {
+    position: absolute;
+    top: 190px; left: 220px; /* 编号行 */
+    font-size: 10px; font-weight: 500; font-family: SimHei, sans-serif;
+    white-space: nowrap;
+}
+/* ---------- 头像 ---------- */
+.headimg {
+    position: absolute;
+    right: 265px;          /* 根据背景图定位，保持原位置 */
+    top: 65px;
+    width: 75px;
+    height: 95px;
+    z-index: 888;
+    object-fit: cover;
+    /* 初始隐藏，有照片时用JS显示 */
+}
+/* ---------- 二维码 ---------- */
+.qr-container {
+    position: absolute;
+    right: 50px;
+    top: 130px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 999;
+}
+#qrcode {
+    width: 54px;
+    height: 54px;
+    border: 4px solid #fff;
+    position: relative;    /* 关键：相对定位，不再使用absolute堆叠 */
+}
+#qrcode img, #qrcode canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+/* 竖排文字仅用于二维码旁边的说明（如“扫码验证”），不影响信息行 */
+.vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size: 10px;
+    font-family: FangSong, KaiTi, STFangsong, STKaiti, SimSun, STSong, serif;
+}
+</style>
+</head>
+<body>
+<div class="workspace">
+    <form class="form-panel" id="certForm">
+        <h1>兰州健康证信息</h1>
+        <div class="form-subtitle">填写信息后，右侧会同步更新预览</div>
+        <div class="field" style="margin-top:18px">
+            <label for="avatarInput">头像</label>
+            <div class="avatar-drop" id="avatarDrop">拖拽头像到这里，或点击此处选择图片<input id="avatarInput" type="file" accept="image/*"></div>
+        </div>
+        <div class="field-grid">
+            <div class="field"><label for="nameInput">姓名</label><input id="nameInput" value="谢民安" required></div>
+            <div class="field"><label for="categoryInput">作业类别</label><input id="categoryInput" value="食品" required></div>
+            <div class="field"><label for="idcardInput">身份证号</label><input id="idcardInput" value="" required></div>
+            <div class="field"><label for="examTimeInput">发证日期</label><input id="examTimeInput" type="date" value="2026-09-06" required></div>
+            <div class="field"><label for="orgInput">发证机构</label><input id="orgInput" value="兰州市疾病预防控制中心" required></div>
+            <div class="field"><label for="certIdInput">证书 ID</label><input id="certIdInput" value="9491" inputmode="numeric" required></div>
+        </div>
+        <div class="hint">编号格式为 LZ+发证日期+5位随机数字，与证书 ID 独立。</div>
+        <button class="btn" id="randomNumberBtn" type="button" style="margin-top:8px">随机生成编号</button>
+        <button class="btn submit-btn" id="generateBtn" type="submit">生成并提交</button>
+    </form>
+    <div class="preview-panel">
+    <div class="container">
+    <div id="certificatePreview" class="cardpic">
+        <div class="target-box">
+            <!-- 背景图：请确认文件名为 lanzhou.png 并位于 /jkz/ 目录 -->
+            <img class="card-bg" src="./1/兰州.png" alt="背景">
+            
+            <!-- 信息行（横排，完全还原） -->
+            <div class="ylxingming">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;姓名:<span id="v_name">谢民安</span></div>
+            <div class="ylcongye">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;作业类别:<span id="v_category"></span></div>
+            <div class="ylbianhao">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;身份证号:<span id="v_idcard"></span></div>
+            <div class="ylfazhengriqi">&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;发证日期:<span id="v_exam">2026年09月06日</span></div>
+            <div class="yldaoqiriqi">&emsp;&emsp;&emsp;有效期限:<span id="v_valid">2027年09月05日</span></div>
+            <div class="ylfzdw">发证机构:<span id="v_org">兰州市疾病预防控制中心</span></div>
+            <div class="ylsuijibianhao">&emsp;&emsp;编号:<span id="v_random">LZ2026090654321</span></div>
+
+            <!-- 头像 -->
+            <img id="headImg" class="headimg" src="./temp/1.png" alt="照片">
+
+            <!-- 二维码区域 -->
+            <div class="qr-container">
+                <div id="qrcode"></div>
+                <div class="vertical-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="statusMessage">正在生成健康证图片...</div>
+    <div class="btn-wrap">
+        <button class="btn" id="androidBtn" disabled>安卓下载</button>
+        <button class="btn" id="iosBtn" disabled>iOS 预览</button>
+    </div>
+</div>
+</div>
+</div>
+
+<div id="previewModal">
+    <div class="close" onclick="hideModal()">×</div>
+    <img id="modalImg" src="" alt="健康证预览">
+</div>
+<div id="toast" class="toast"></div>
+<canvas id="qrcodeCanvas" style="display:none"></canvas>
+
+<script>
+const randomQrPrefix = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let value = '';
+    for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
+    return value;
+};
+const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+const generateNumber = dateText => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText || '');
+    const datePart = match ? match.slice(1).join('') : '';
+    return datePart + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+};
+const formState = {
+    certId: '9491', number: generateNumber('2026-09-06'), name: '谢民安',
+    category: '食品', idcard: '622301199508018932', examTime: '2026-09-06', org: '兰州市疾病预防控制中心'
+};
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+let finalDataUrl = '';
+let previewTimer;
+
+// 图片加载
+function loadImage(url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        if (img.complete) resolve(img);
+    });
+}
+
+// 状态提示
+function setStatus(msg, isError = false) {
+    const el = document.getElementById('statusMessage');
+    el.textContent = msg;
+    el.style.color = isError ? '#e74c3c' : '#555';
+}
+
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+// 压缩
+function getCompressedDataUrl(sourceCanvas, maxWidth = 1200, quality = 0.5) {
+    const srcW = sourceCanvas.width, srcH = sourceCanvas.height;
+    if (srcW <= maxWidth) return sourceCanvas.toDataURL('image/jpeg', quality);
+    const scale = maxWidth / srcW;
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = maxWidth;
+    tmpCanvas.height = Math.round(srcH * scale);
+    const tmpCtx = tmpCanvas.getContext('2d');
+    tmpCtx.drawImage(sourceCanvas, 0, 0, srcW, srcH, 0, 0, maxWidth, tmpCanvas.height);
+    return tmpCanvas.toDataURL('image/jpeg', quality);
+}
+
+// 上传
+async function uploadWithRetry(dataUrl, maxRetry = 2) {
+    for (let i = 0; i <= maxRetry; i++) {
+        try {
+            const resp = await fetch('/index.php?action=save_cert_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'cert_id=' + encodeURIComponent(formState.certId) +
+                    '&exam_date=' + encodeURIComponent(formState.examTime) +
+                    '&image_data=' + encodeURIComponent(dataUrl)
+            });
+            const data = await resp.json();
+            if (data.ok) return true;
+            if (i < maxRetry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+            throw new Error(data.msg || '服务器返回失败');
+        } catch (e) {
+            if (i < maxRetry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+            throw e;
+        }
+    }
+}
+
+// 二维码生成
+async function generateQR(url) {
+    return new Promise(resolve => {
+        QRCode.toCanvas(document.getElementById('qrcodeCanvas'), url, { width: 200, margin: 0 }, error => {
+            if (error) { resolve(false); return; }
+            const img = new Image();
+            img.src = document.getElementById('qrcodeCanvas').toDataURL("image/png");
+            img.onload = () => {
+                const qrContainer = document.getElementById('qrcode');
+                qrContainer.innerHTML = '';
+                qrContainer.appendChild(img);
+                resolve(true);
+            };
+            img.onerror = () => resolve(false);
+        });
+    });
+}
+
+function getValidDate(dateText) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText || '');
+    if (!match) return '';
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    if (date.getFullYear() !== Number(match[1]) || date.getMonth() !== Number(match[2]) - 1 || date.getDate() !== Number(match[3])) return '';
+    date.setFullYear(date.getFullYear() + 1);
+    date.setDate(date.getDate() - 1);
+    return date.getFullYear() + '年' + String(date.getMonth() + 1).padStart(2, '0') + '月' + String(date.getDate()).padStart(2, '0') + '日';
+}
+
+function formatDate(dateText) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText || '');
+    return match ? match[1] + '年' + match[2] + '月' + match[3] + '日' : '';
+}
+
+function syncCard() {
+    document.getElementById('v_name').textContent = formState.name;
+    document.getElementById('v_category').textContent = formState.category;
+    document.getElementById('v_idcard').textContent = formState.idcard;
+    document.getElementById('v_exam').textContent = formatDate(formState.examTime);
+    document.getElementById('v_valid').textContent = getValidDate(formState.examTime);
+    document.getElementById('v_org').textContent = formState.org;
+    document.getElementById('v_random').textContent = formState.number;
+}
+
+async function updatePreview() {
+    syncCard();
+    await generateQR(qrUrlBase + '&id=' + encodeURIComponent(formState.certId));
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const canvas = await html2canvas(document.getElementById('certificatePreview'), {
+        scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff'
+    });
+    finalDataUrl = getCompressedDataUrl(canvas, 1200, 0.5);
+    setStatus('预览已更新，点击“生成并提交”保存');
+    document.getElementById('androidBtn').disabled = false;
+    document.getElementById('iosBtn').disabled = false;
+}
+
+function schedulePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => updatePreview().catch(error => setStatus('预览失败：' + error.message, true)), 180);
+}
+
+// 页面初始化只生成本地预览，点击提交后才上传。
+async function init() {
+    try {
+        document.getElementById('nameInput').value = formState.name;
+        document.getElementById('categoryInput').value = formState.category;
+        document.getElementById('idcardInput').value = formState.idcard;
+        document.getElementById('examTimeInput').value = formState.examTime;
+        document.getElementById('orgInput').value = formState.org;
+        document.getElementById('certIdInput').value = formState.certId;
+        await updatePreview();
+    } catch (e) {
+        setStatus('生成失败：' + e.message, true);
+        showToast('保存失败，请刷新重试', true);
+    }
+}
+
+async function submitCertificate(event) {
+    event.preventDefault();
+    if (!event.currentTarget.reportValidity()) return;
+    const button = document.getElementById('generateBtn');
+    button.disabled = true;
+    try {
+        await updatePreview();
+        setStatus('正在上传云端...');
+        await uploadWithRetry(finalDataUrl);
+        setStatus('保存成功，可以下载了 ✓');
+        showToast('云端保存成功');
+    } catch (e) {
+        setStatus('上传失败：' + e.message, true);
+        showToast('保存失败，请检查网络后重试', true);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function loadSelectedAvatar(file) {
+    if (!file || !file.type.startsWith('image/')) {
+        if (file) showToast('请选择图片文件', true);
+        return;
+    }
+    const headImg = document.getElementById('headImg');
+    headImg.src = URL.createObjectURL(file);
+    headImg.style.display = 'block';
+    await new Promise(resolve => { headImg.onload = resolve; headImg.onerror = resolve; });
+    schedulePreview();
+}
+
+function download() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    const a = document.createElement('a');
+    a.href = finalDataUrl;
+    a.download = formState.name + '健康证.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function preview() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    document.getElementById('modalImg').src = finalDataUrl;
+    document.getElementById('previewModal').style.display = 'flex';
+}
+function hideModal() { document.getElementById('previewModal').style.display = 'none'; }
+
+document.getElementById('androidBtn').onclick = download;
+document.getElementById('iosBtn').onclick = () => { if (isIOS) preview(); else download(); };
+document.getElementById('certForm').addEventListener('submit', submitCertificate);
+document.getElementById('randomNumberBtn').addEventListener('click', () => {
+    formState.number = generateNumber(formState.examTime);
+    schedulePreview();
+});
+document.getElementById('avatarInput').addEventListener('change', event => loadSelectedAvatar(event.target.files[0]));
+const avatarDrop = document.getElementById('avatarDrop');
+avatarDrop.addEventListener('click', () => document.getElementById('avatarInput').click());
+avatarDrop.addEventListener('dragover', event => { event.preventDefault(); avatarDrop.classList.add('dragover'); });
+avatarDrop.addEventListener('dragleave', () => avatarDrop.classList.remove('dragover'));
+avatarDrop.addEventListener('drop', event => {
+    event.preventDefault();
+    avatarDrop.classList.remove('dragover');
+    loadSelectedAvatar(event.dataTransfer.files[0]);
+});
+document.getElementById('nameInput').addEventListener('input', event => { formState.name = event.target.value; schedulePreview(); });
+document.getElementById('categoryInput').addEventListener('input', event => { formState.category = event.target.value; schedulePreview(); });
+document.getElementById('idcardInput').addEventListener('input', event => { formState.idcard = event.target.value.trim(); schedulePreview(); });
+document.getElementById('examTimeInput').addEventListener('input', event => {
+    formState.examTime = event.target.value;
+    formState.number = generateNumber(formState.examTime);
+    schedulePreview();
+});
+document.getElementById('orgInput').addEventListener('input', event => { formState.org = event.target.value; schedulePreview(); });
+document.getElementById('certIdInput').addEventListener('input', event => {
+    event.target.value = event.target.value.replace(/\D/g, '');
+    formState.certId = event.target.value;
+    schedulePreview();
+});
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

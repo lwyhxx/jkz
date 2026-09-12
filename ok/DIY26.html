@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title> DIY26</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f0f4f8;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;}
+.container{max-width:1100px;margin:0 auto;}
+.workspace{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,600px);gap:24px;align-items:start;text-align:left;}
+.form-panel{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.form-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;}
+.form-panel h1{font-size:22px;color:#1f2937;}
+.form-subtitle{font-size:12px;color:#6b7280;margin-top:5px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.field{margin-bottom:14px;}
+.field label{display:block;margin-bottom:6px;font-size:14px;color:#374151;font-weight:600;}
+.field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;background:#fff;}
+.field input:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.12);}
+.avatar-drop{border:2px dashed #bfdbfe;border-radius:10px;padding:14px;text-align:center;color:#6b7280;background:#eff6ff;cursor:pointer;transition:.2s;}
+.avatar-drop.dragover{border-color:#1a73e8;background:#dbeafe;color:#1d4ed8;}
+.avatar-drop input{display:none;}
+.number-actions{display:flex;gap:8px;margin-top:8px;}
+.number-actions .btn{padding:8px 12px;font-size:14px;}
+.hint{font-size:12px;color:#6b7280;margin-top:5px;line-height:1.5;}
+.submit-btn{width:100%;margin-top:4px;}
+.preview-panel{min-width:0;}
+#previewCanvas{width:100%;display:block;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.15);margin-bottom:16px;}
+.status{text-align:center;font-size:16px;margin:12px 0;color:#555;}
+.btn-wrap{display:flex;gap:12px;justify-content:center;margin-top:12px;}
+.btn{flex:1;padding:12px 0;border:none;border-radius:12px;font-size:16px;font-weight:bold;background:#1a73e8;color:#fff;cursor:pointer;}
+.btn:disabled{background:#ccc;cursor:not-allowed;}
+.btn:active{opacity:0.9;}
+#previewModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;}
+#previewModal img{max-width:90%;max-height:80vh;border-radius:12px;}
+#previewModal .close{position:absolute;top:20px;right:20px;width:32px;height:32px;background:#fff;border-radius:50%;font-size:20px;line-height:32px;color:red;cursor:pointer;text-align:center;}
+.toast{position:fixed;top:20px;right:20px;background:#27ae60;color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:9999;font-size:14px;}
+.toast.error{background:#e74c3c;}
+@media (max-width:760px){.workspace{grid-template-columns:1fr;}.preview-panel{order:-1;}.form-panel{padding:16px;}.field-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="workspace">
+        <form class="form-panel" id="certForm">
+            <div class="form-heading">
+                <div>
+                    <h1>健康证信息</h1>
+                    <div class="form-subtitle">填写信息后，右侧会同步更新预览</div>
+                </div>
+            </div>
+            <div class="field">
+                <label for="avatarInput">头像</label>
+                <div class="avatar-drop" id="avatarDrop">
+                    拖拽头像到这里，或点击此处选择图片
+                    <input id="avatarInput" type="file" accept="image/*">
+                </div>
+            </div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="orgInput">发证机构</label>
+                    <input id="orgInput" type="text" value="台州市黄岩区第一人民医院" autocomplete="organization" required>
+                </div>
+                <div class="field">
+                    <label for="nameInput">姓名</label>
+                    <input id="nameInput" type="text" value="柯镇光" autocomplete="name" required>
+                </div>
+                <div class="field">
+                    <label for="idcardInput">身份证号</label>
+                    <input id="idcardInput" type="text" value="330324198810154037" inputmode="text" autocomplete="off" required>
+                </div>
+                <div class="field">
+                    <label for="examTimeInput">体检日期</label>
+                    <input id="examTimeInput" type="date" required>
+                </div>
+                <div class="field">
+                    <label for="certIdInput">证书 ID</label>
+                    <input id="certIdInput" type="text" value="8727" inputmode="numeric" autocomplete="off" required>
+                    <div class="hint">用于二维码和提交请求。</div>
+                </div>
+                <div class="field">
+                    <label for="numberInput">编号</label>
+                    <input id="numberInput" type="text" readonly aria-readonly="true">
+                    <div class="number-actions">
+                        <button class="btn" id="randomNumberBtn" type="button">随机生成</button>
+                    </div>
+                </div>
+            </div>
+            <div class="hint">编号为 9 位数字，与证书 ID 独立。</div>
+            <button class="btn submit-btn" id="generateBtn" type="submit">生成并提交</button>
+        </form>
+        <div class="preview-panel">
+            <canvas id="previewCanvas"></canvas>
+            <div id="imgFallback" style="display:none;padding:40px;color:#999;">底图加载失败，请检查 /jkz/images/DIY28.png 是否存在</div>
+            <div class="status" id="statusMessage">正在加载底图...</div>
+            <div class="btn-wrap">
+                <button class="btn" id="androidBtn" type="button" disabled>安卓下载</button>
+                <button class="btn" id="iosBtn" type="button" disabled>iOS 预览</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="previewModal">
+    <div class="close" onclick="hideModal()">×</div>
+    <img id="modalImg" src="" alt="健康证预览">
+</div>
+<div id="toast" class="toast"></div>
+<canvas id="qrcodeCanvas" style="display:none"></canvas>
+
+<script>
+// ==================== 页面默认数据与表单状态 ====================
+// 默认头像和二维码地址只提供基础路径，随机子域名和证书 ID 在运行时拼接。
+const defaultAvatarFile = "./temp/1.png";
+const randomQrPrefix = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let prefix = "";
+    for (let i = 0; i < 6; i++) {
+        prefix += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return prefix;
+};
+const qrUrlBase = "https://" + randomQrPrefix() + ".t7oazy.lat/index.php?action=view_cert";
+
+// 卡面编号和证书 ID 分开保存：number 只显示在卡面，certId 用于二维码和接口提交。
+const randomNineDigitId = () => String(Math.floor(100000000 + Math.random() * 900000000));
+// 体检日期默认取「当前日期前两天」，使用本地时区，格式 YYYY-MM-DD
+const defaultExamTime = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+})();
+
+const formState = {
+    certId: "8727",
+    number: randomNineDigitId(),
+    name: "柯镇光",
+    idcard: "330324198810154037",
+    examTime: defaultExamTime,
+    org: "台州市黄岩区第一人民医院"
+};
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+// ==================== 可调节参数区 ====================
+const logoX = 50, logoY = 30, logoW = 50, logoH = 50;
+const titleFontSize = 40, titleX = 250, titleY = 40;
+
+// ========== 文字大小调节 ==========
+// 正文文字大小（像素），数值越大正文越大
+const textFontSize = 20;
+// 正文起始位置（X: 距左距离，Y: 距顶距离）
+const textStartX = 50;
+const textStartY = 85;
+
+// ★★★ 行间距调节（非常重要） ★★★
+// 正文行间距（像素）：控制每一行文字之间的垂直距离，数值越大行距越宽，文字整体越往下拉伸
+// 如果需要紧凑排版，可以减小该值（例如 35）；如果需要宽松排版，可以增大该值（例如 55）
+const textLineGap = 30;
+
+// ========== 头像大小调节 ==========
+// 头像区域 X 坐标（距左距离）
+const imgX = 350;
+// 头像区域 Y 坐标（距顶距离）
+const imgY = 80;
+// 头像宽度（像素），数值越大头像越宽
+const imgW = 100;
+// 头像高度（像素），数值越大头像越高
+const imgH = 130;
+// 头像圆角半径（像素），想变成直角可设为0
+const imgRadius = 5;
+
+// ========== 二维码大小调节 ==========
+// 二维码 X 坐标（距左距离）
+const qrX = 390;
+// 二维码 Y 坐标（距顶距离）
+const qrY = 250;
+// 二维码尺寸（宽高相同，像素），数值越大二维码越大
+const qrSize = 60;
+
+// ========== 竖排文字调节（二维码右侧“扫码验真”） ==========
+// 竖排文字内容（每个字一行）
+const verticalText = "扫码验真";
+// 竖排文字字体大小（像素），数值越大字越大
+const verticalTextFontSize = 10;
+// 竖排文字颜色
+const verticalTextColor = "#000";
+// 竖排文字起始 X 坐标（默认在二维码右侧，自动计算：二维码右边 + 10px，可手动修改）
+const verticalTextX = qrX + qrSize + 10;
+// 竖排文字起始 Y 坐标（默认与二维码顶部对齐，可手动调整）
+const verticalTextY = qrY;
+// 竖排文字每个字之间的间距（像素），数值越大字与字之间越远
+const verticalTextLineGap = verticalTextFontSize + 4;
+
+// ========== 印章图片大小调节 ==========
+// 印章 X 坐标（距左距离）
+const sealX = 180;
+// 印章 Y 坐标（距顶距离）
+const sealY = 140;
+// 印章宽度（像素），数值越大印章越宽
+const sealW = 120;
+// 印章高度（像素），数值越大印章越高
+const sealH = 120;
+
+// ========== 文字内容常量（一般不需修改） ==========
+const lineText = ["编   号:", "姓   名:", "从业类别:", "体检日期:", "有效期:"];
+const validText = "壹年";
+const typeText = "食品";
+
+// ==================== 高清输出设置 ====================
+// 输出图片最大宽度（像素），设为 0 表示不缩放，保持底图原始分辨率
+const outputMaxWidth = 0;
+// PNG 无损格式，无需质量参数；文件较大但最清晰
+// （注意：outputQuality 已移除，因为 PNG 不支持质量调节）
+
+// 二维码生成时放大倍数（提升清晰度，建议 3-4 倍）
+const qrRenderScale = 4;
+
+// ==================== 画布初始化 ====================
+// 画布负责合成底图、文字、头像、二维码和印章，最终导出 PNG。
+const canvas = document.getElementById("previewCanvas");
+const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+
+// 图片对象
+let bgImg, sealImg, avatarImg, qrImg,logoImg;
+let finalDataUrl = "";
+let previewVersion = 0;
+
+// 如果浏览器不支持 roundRect，手动添加 polyfill
+if(!CanvasRenderingContext2D.prototype.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+        if(w<2*r) r=w/2; if(h<2*r) r=h/2;
+        this.moveTo(x+r,y); this.lineTo(x+w-r,y);
+        this.quadraticCurveTo(x+w,y,x+w,y+r); this.lineTo(x+w,y+h-r);
+        this.quadraticCurveTo(x+w,y+h,x+w-r,y+h); this.lineTo(x+r,y+h);
+        this.quadraticCurveTo(x,y+h,x,y+h-r); this.lineTo(x,y+r);
+        this.quadraticCurveTo(x,y,x+r,y); return this;
+    };
+}
+
+// ==================== 图片加载函数 ====================
+// 图片加载失败时返回 null，由调用方决定是否显示错误或继续生成预览。
+async function loadImage(url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        if (img.complete) resolve(img);
+    });
+}
+
+// ==================== 核心绘制函数 ====================
+// 每次表单状态发生变化时重新绘制整张证书，保证右侧预览与表单一致。
+function draw() {
+    // 如果没有底图，显示错误提示并隐藏画布
+    if (!bgImg) {
+        canvas.style.display = "none";
+        document.getElementById("imgFallback").style.display = "block";
+        return;
+    }
+    canvas.style.display = "block";
+    document.getElementById("imgFallback").style.display = "none";
+
+    // 设置画布尺寸为底图原始尺寸（不缩放，保证高清）
+    canvas.width = bgImg.width;
+    canvas.height = bgImg.height;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(bgImg,0,0);
+
+    // if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+    //     ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+    // }
+    
+    // ctx.font = `bold ${titleFontSize}px STSong, Songti SC, serif`;
+    // ctx.fillStyle = "#000";
+    // ctx.textBaseline = "top";
+    // ctx.fillText("从业人员健康证明", titleX, titleY);
+    
+    // ----- 绘制正文信息 -----
+    ctx.font = `bold ${textFontSize}px STSong, Songti SC, serif`;
+    ctx.fillStyle = "#000";
+    ctx.textBaseline = "top";   // 设置文字基线为顶部，确保行间距计算准确
+    ctx.fillText(lineText[0] + formState.number,   textStartX, textStartY);
+    ctx.fillText("身份证号:" + formState.idcard,   textStartX, textStartY + textLineGap);
+    ctx.fillText(lineText[1] + formState.name,     textStartX, textStartY + textLineGap * 2);
+    ctx.fillText(lineText[2] + typeText,           textStartX, textStartY + textLineGap * 3);
+    ctx.fillText(lineText[3] + formState.examTime, textStartX, textStartY + textLineGap * 4);
+    ctx.fillText(lineText[4] + validText,          textStartX, textStartY + textLineGap * 5);
+    ctx.fillText(formState.org,                    textStartX, textStartY + textLineGap * 6);
+
+    // ----- 绘制头像（带圆角）-----
+    if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(imgX, imgY, imgW, imgH, imgRadius);
+        ctx.clip();
+        // 高质量缩放绘制头像
+        ctx.drawImage(avatarImg, imgX, imgY, imgW, imgH);
+        ctx.restore();
+    }
+
+    // ----- 绘制二维码 -----
+    if (qrImg && qrImg.complete) {
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+    }
+
+    // ----- 绘制竖排文字“扫码验真” -----
+    ctx.save();
+    ctx.font = `bold ${verticalTextFontSize}px STSong, Songti SC, serif`;
+    ctx.fillStyle = verticalTextColor;
+    ctx.textAlign = "center";      // 水平居中，使每个字在竖排中轴线对齐
+    ctx.textBaseline = "top";      // 基线为顶部，方便计算位置
+    for (let i = 0; i < verticalText.length; i++) {
+        const char = verticalText[i];
+        ctx.fillText(char, verticalTextX, verticalTextY + i * verticalTextLineGap);
+    }
+    ctx.restore();
+
+    // ----- 绘制印章 -----
+    if (sealImg && sealImg.complete && sealImg.naturalWidth > 0) {
+        ctx.drawImage(sealImg, sealX, sealY, sealW, sealH);
+    } else {
+        // 如果没有印章图，填充透明区域（可忽略）
+        ctx.fillStyle = "rgba(0,0,0,0)";
+        ctx.fillRect(sealX, sealY, sealW, sealH);
+    }
+
+    // ★★★ 生成 PNG 无损图片数据（文件较大，但最清晰） ★★★
+    finalDataUrl = canvas.toDataURL("image/png");
+}
+
+// ==================== 二维码生成函数（高清版） ====================
+// 先用更大的尺寸生成二维码，再缩小绘制到证书上，以减少锯齿。
+async function generateQR(url) {
+    return new Promise(resolve => {
+        // 使用放大后的尺寸生成二维码，绘制到画布时缩小，边缘更平滑清晰
+        const renderSize = qrSize * qrRenderScale;
+        QRCode.toCanvas(document.getElementById('qrcodeCanvas'), url, { width: renderSize, margin: 0 }, error => {
+            if (error) { resolve(false); return; }
+            qrImg = new Image();
+            qrImg.src = document.getElementById('qrcodeCanvas').toDataURL("image/png");
+            qrImg.onload = () => { draw(); resolve(true); };
+            qrImg.onerror = () => resolve(false);
+        });
+    });
+}
+
+// ==================== 状态显示函数 ====================
+function setStatus(msg, isError = false) {
+    const el = document.getElementById('statusMessage');
+    el.textContent = msg;
+    el.style.color = isError ? '#e74c3c' : '#555';
+}
+
+// ==================== 图片数据获取函数（PNG，支持可选缩放） ====================
+function getPngDataUrl(sourceCanvas, maxWidth = 0) {
+    const srcW = sourceCanvas.width;
+    const srcH = sourceCanvas.height;
+
+    // 如果 maxWidth 为 0 或大于原图宽度，直接返回原图 PNG
+    if (maxWidth <= 0 || srcW <= maxWidth) {
+        return sourceCanvas.toDataURL("image/png");
+    }
+
+    // 否则缩放后导出 PNG
+    const scale = maxWidth / srcW;
+    const dstW = maxWidth;
+    const dstH = Math.round(srcH * scale);
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = dstW;
+    tmpCanvas.height = dstH;
+    const tmpCtx = tmpCanvas.getContext('2d');
+    tmpCtx.drawImage(sourceCanvas, 0, 0, srcW, srcH, 0, 0, dstW, dstH);
+    return tmpCanvas.toDataURL("image/png");
+}
+
+// ==================== 上传函数（带重试） ====================
+// 只有用户点击“生成并提交”后才调用此函数，避免编辑表单时反复提交服务器。
+async function uploadWithRetry(dataUrl, maxRetry = 2) {
+    for (let i = 0; i <= maxRetry; i++) {
+        try {
+            const resp = await fetch('http://aiyu.lat/index.php?action=save_cert_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'cert_id=' + encodeURIComponent(formState.certId) +
+                    '&exam_date=' + encodeURIComponent(formState.examTime) +
+                    '&image_data=' + encodeURIComponent(dataUrl)
+            });
+            const data = await resp.json();
+            if (data.ok) return true;
+            if (i < maxRetry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+            throw new Error(data.msg || '服务器返回失败');
+        } catch (e) {
+            if (i < maxRetry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+            throw e;
+        }
+    }
+}
+
+// ==================== 提示框函数 ====================
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+// ==================== 按钮功能 ====================
+function download() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    const a = document.createElement('a');
+    a.href = finalDataUrl;
+    a.download = formState.name + '健康证.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// 在弹窗中查看当前已经生成的 PNG，不发起服务器请求。
+function preview() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    document.getElementById('modalImg').src = finalDataUrl;
+    document.getElementById('previewModal').style.display = 'flex';
+}
+
+function hideModal() { document.getElementById('previewModal').style.display = 'none'; }
+
+function getQrUrl() {
+    // 证书 ID 变化后，二维码内容随预览一起更新。
+    return qrUrlBase + '&id=' + encodeURIComponent(formState.certId);
+}
+
+// 文件选择和拖拽上传共用此入口，读取成功后立即刷新本地预览。
+async function loadSelectedAvatar(file) {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        showToast('请选择图片文件', true);
+        return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    avatarImg = await loadImage(objectUrl);
+    URL.revokeObjectURL(objectUrl);
+    draw();
+    finalDataUrl = getPngDataUrl(canvas, outputMaxWidth);
+}
+
+async function updatePreview() {
+    if (!bgImg) return;
+    // 版本号用于丢弃过期的异步二维码结果，避免快速输入时旧预览覆盖新预览。
+    const currentVersion = ++previewVersion;
+    if (formState.certId) await generateQR(getQrUrl());
+    else qrImg = null;
+    if (currentVersion !== previewVersion) return;
+    draw();
+    finalDataUrl = getPngDataUrl(canvas, outputMaxWidth);
+    document.getElementById('androidBtn').disabled = false;
+    document.getElementById('iosBtn').disabled = false;
+    setStatus('预览已更新，点击“生成并提交”保存');
+}
+
+let previewTimer;
+function schedulePreview() {
+    // 连续输入时等待用户短暂停止输入，再执行一次完整渲染。
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(updatePreview, 180);
+}
+
+async function submitCertificate(event) {
+    // 表单提交是唯一的服务器写入入口：先校验、生成最新图片，再上传。
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    const generateBtn = document.getElementById('generateBtn');
+    generateBtn.disabled = true;
+    try {
+        await updatePreview();
+        setStatus('正在上传云端（请稍候）...');
+        await uploadWithRetry(finalDataUrl);
+        setStatus('保存成功，可以下载了 ✓');
+        showToast('云端保存成功');
+    } catch (e) {
+        setStatus('上传失败：' + e.message, true);
+        showToast('保存失败，请检查网络后重试', true);
+    } finally {
+        generateBtn.disabled = false;
+    }
+}
+
+// ==================== 主初始化流程 ====================
+// 页面加载时只加载素材并生成本地预览，不自动上传证书。
+async function init() {
+    try {
+        setStatus('正在加载底图...');
+        [bgImg, sealImg,logoImg] = await Promise.all([
+            loadImage('./images/DIY26.png?v=1787304048'),   // 底图路径
+            loadImage('./images/DIY8.png?v=1782702281'),    // 印章路径
+            loadImage('./images/logo2.png?v=1782759280')
+        ]);
+        if (!bgImg) throw new Error('底图加载失败');
+        if (defaultAvatarFile) avatarImg = await loadImage(defaultAvatarFile);
+        await updatePreview();
+    } catch (e) {
+        setStatus('预览加载失败：' + e.message, true);
+        showToast('预览加载失败，请检查图片路径', true);
+    }
+}
+
+// ==================== 表单与交互事件 ====================
+// 回填运行时生成的编号、默认证书 ID 和默认体检日期。
+document.getElementById('certIdInput').value = formState.certId;
+document.getElementById('numberInput').value = formState.number;
+document.getElementById('examTimeInput').value = formState.examTime;
+document.getElementById('certForm').addEventListener('submit', submitCertificate);
+
+// 重新生成卡面编号，不影响证书 ID 和二维码。
+document.getElementById('randomNumberBtn').addEventListener('click', () => {
+    formState.number = randomNineDigitId();
+    document.getElementById('numberInput').value = formState.number;
+    schedulePreview();
+});
+document.getElementById('avatarInput').addEventListener('change', event => loadSelectedAvatar(event.target.files[0]));
+const avatarDrop = document.getElementById('avatarDrop');
+
+// 点击上传区打开文件选择器；拖拽事件则直接读取放入的图片文件。
+avatarDrop.addEventListener('click', () => document.getElementById('avatarInput').click());
+avatarDrop.addEventListener('dragover', event => {
+    event.preventDefault();
+    avatarDrop.classList.add('dragover');
+});
+avatarDrop.addEventListener('dragleave', () => avatarDrop.classList.remove('dragover'));
+avatarDrop.addEventListener('drop', event => {
+    event.preventDefault();
+    avatarDrop.classList.remove('dragover');
+    loadSelectedAvatar(event.dataTransfer.files[0]);
+});
+document.getElementById('orgInput').addEventListener('input', event => { formState.org = event.target.value; schedulePreview(); });
+document.getElementById('nameInput').addEventListener('input', event => { formState.name = event.target.value; schedulePreview(); });
+document.getElementById('idcardInput').addEventListener('input', event => { formState.idcard = event.target.value.trim(); schedulePreview(); });
+document.getElementById('examTimeInput').addEventListener('input', event => { formState.examTime = event.target.value; schedulePreview(); });
+
+// 证书 ID 只允许数字，修改后会触发二维码更新。
+document.getElementById('certIdInput').addEventListener('input', event => {
+    event.target.value = event.target.value.replace(/\D/g, '');
+    formState.certId = event.target.value;
+    schedulePreview();
+});
+document.getElementById('androidBtn').onclick = download;
+document.getElementById('iosBtn').onclick = () => {
+    if (isIOS) preview();
+    else download();
+};
+
+// 页面加载完成后执行初始化
+window.addEventListener('load', init);
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

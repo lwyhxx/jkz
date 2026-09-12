@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>佛山健康证</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .status { font-size: 16px; margin: 12px 160px; color: #555; }
+        .btn-wrap { display: flex; gap: 12px; justify-content: center; margin-top: 12px; }
+        .btn { flex: 1; max-width: 200px; padding: 12px 0; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; background: #1a73e8; color: #fff; cursor: pointer; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn:active { opacity: 0.9; }
+        #previewModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 999; }
+        #previewModal img { max-width: 90%; max-height: 80vh; border-radius: 12px; }
+        #previewModal .close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; background: #fff; border-radius: 50%; font-size: 20px; line-height: 32px; color: red; cursor: pointer; text-align: center; }
+        .toast { position: fixed; top: 20px; right: 20px; background: #27ae60; color: #fff; padding: 10px 20px; border-radius: 20px; display: none; z-index: 9999; font-size: 14px; }
+        .toast.error { background: #e74c3c; }
+
+        .workspace { width: min(100%, 1100px); display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 600px); gap: 24px; align-items: start; text-align: left; }
+        .form-panel { padding: 20px; border-radius: 16px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+        .form-panel h1 { margin: 0; color: #1f2937; font-size: 22px; }
+        .form-subtitle { margin-top: 5px; color: #6b7280; font-size: 12px; }
+        .field { margin-bottom: 14px; }
+        .field label { display: block; margin-bottom: 6px; color: #374151; font-size: 14px; font-weight: 600; }
+        .field input { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; }
+        .field input:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.12); }
+        .avatar-drop { padding: 14px; border: 2px dashed #bfdbfe; border-radius: 10px; color: #6b7280; text-align: center; background: #eff6ff; cursor: pointer; }
+        .avatar-drop.dragover { border-color: #1a73e8; color: #1d4ed8; background: #dbeafe; }
+        .avatar-drop input { display: none; }
+        .hint { margin-top: 5px; color: #6b7280; font-size: 12px; line-height: 1.5; }
+        .submit-btn { width: 100%; max-width: none; margin-top: 4px; }
+        .preview-panel { min-width: 0; }
+        @media (max-width: 760px) { .workspace { grid-template-columns: 1fr; } .preview-panel { order: -1; } .form-panel { padding: 16px; } }
+
+        #captureBox {
+            width: 380px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+        }
+
+        .cardinfo { display:flex; justify-content:center; font-size:12px; background-color:#ffffff; }
+        .card { width:350px; height:220px; position:relative; background-color:#ffffff; border:1px solid #d4d4d4; border-radius:10px; overflow:hidden; }
+        .card .card-bg { position:absolute; width:350px; height:220px; z-index:1; left:0; top:0; border-radius:10px; }
+        .front-text { position:absolute; z-index:10; color:#030101; font-weight:550; font-size:12px; white-space:nowrap; }
+
+        .card .headimg { position:absolute; right:10px; top:55px; width:100px; height:120px; z-index:9; border-radius:5px; object-fit:cover; }
+        .cardinfo .ygqimg { width:130px; position:absolute; right:145px; top:calc(50% - 30px); z-index:9; }
+
+        .cardinfo-r { display:flex; justify-content:center; margin:5px 0 20px 0; font-size:12px; background-color:#ffffff; }
+        .card-r { width:350px; height:220px; position:relative; border:1px solid #d4d4d4; border-radius:10px; background-color:#ffffff; }
+        .card-r .title { text-align:center; font-weight:bold; line-height:40px; padding-top:5px; font-size:18px; color:#030101; }
+        .card-r .card-ctx { display:flex; height:100px; width:100%; align-items:center; }
+        .card-r .card-ctx .qrcode-wrap { width:80px; height:80px; margin-left:8px; }
+        .card-r .card-ctx .card-ctx-desc { width:calc(100% - 80px); line-height:25px; padding:5px; color:#030101; font-weight:545; font-size:14px; text-align:center; }
+        .card-r .sign { display:flex; justify-content:center; align-items:center; font-size:12px; height:30px; }
+        .card-r .top { position:absolute; top:0; width:100%; background-color:#fefefc; line-height:20px; border-radius:10px 10px 0 0; color:#fff; }
+        .card-r .bottom { position:absolute; bottom:0; width:100%; text-align:center; background-color:#fefefc; line-height:25px; border-radius:0 0 10px 10px; color:#030101; font-size:12px; }
+
+        .status { text-align:center; font-size:16px; margin:12px 0; color:#555; }
+        .btn-wrap { display:flex; gap:12px; justify-content:center; margin-top:12px; }
+        .btn { flex:1; padding:12px 0; border:none; border-radius:12px; font-size:16px; font-weight:bold; background:#1a73e8; color:#fff; cursor:pointer; }
+        .btn:disabled { background:#ccc; cursor:not-allowed; }
+        .btn:active { opacity:0.9; }
+        #previewModal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:999; }
+        #previewModal img { max-width:90%; max-height:80vh; border-radius:12px; }
+        #previewModal .close { position:absolute; top:20px; right:20px; width:32px; height:32px; background:#fff; border-radius:50%; font-size:20px; line-height:32px; color:red; cursor:pointer; text-align:center; }
+        .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:10px 20px; border-radius:20px; display:none; z-index:9999; font-size:14px; }
+        .toast.error { background:#e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="workspace">
+    <form class="form-panel" id="certForm">
+        <h1>佛山健康证信息</h1>
+        <div class="form-subtitle">填写信息后，右侧会同步更新预览</div>
+        <div class="field" style="margin-top:18px"><label for="avatarInput">头像</label><div class="avatar-drop" id="avatarDrop">拖拽头像到这里，或点击此处选择图片<input id="avatarInput" type="file" accept="image/*"></div></div>
+        <div class="field"><label for="nameInput">姓名</label><input id="nameInput" value="宁文俊" required></div>
+        <div class="field"><label for="categoryInput">从业类别</label><input id="categoryInput" value="食品" required></div>
+        <div class="field"><label for="examTimeInput">发证日期</label><input id="examTimeInput" type="date" value="2026-09-04" required></div>
+        <div class="field"><label for="orgInput">发证机构</label><input id="orgInput" value="佛山市疾病预防控制中心" required></div>
+        <div class="field"><label for="certIdInput">证书 ID</label><input id="certIdInput" value="9410" inputmode="numeric" required><div class="hint">仅用于二维码和提交请求，不显示在卡面。</div></div>
+        <div class="field"><label for="numberInput">编号</label><input id="numberInput" type="text" readonly aria-readonly="true"><button class="btn" id="randomNumberBtn" type="button" style="margin-top:8px">随机生成编号</button></div>
+        <div class="hint">编号格式为 JK+当前日期+6位随机数字。</div>
+        <button class="btn submit-btn" id="generateBtn" type="submit">生成并提交</button>
+    </form>
+    <div id="captureBox">
+    </div>
+
+    <div class="status" id="statusMessage">正在生成健康证图片...</div>
+    <div class="btn-wrap">
+        <button class="btn" id="androidBtn" disabled>安卓下载</button>
+        <button class="btn" id="iosBtn" disabled>iOS 预览</button>
+    </div>
+    <div id="toast" class="toast"></div>
+    </div>
+    </div>
+    <div id="previewModal">
+        <div class="close" onclick="document.getElementById('previewModal').style.display='none'">×</div>
+        <img id="modalImg" src="" alt="预览">
+    </div>
+
+    <script>
+        const randomQrPrefix = () => {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let value = '';
+            for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
+            return value;
+        };
+        const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+        const generateNumber = () => {
+            const date = new Date();
+            const ymd = date.getFullYear().toString() + String(date.getMonth() + 1).padStart(2, '0') + String(date.getDate()).padStart(2, '0');
+            return ymd + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+        };
+        const formState = {
+            certId: '9410', number: generateNumber(), name: '宁文俊', category: '食品',gender: '男', 
+            examTime: '2026-09-04', org: '佛山市疾病预防控制中心'
+        };
+        const isIOS  = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        let finalDataUrl = '';
+        let previewTimer;
+const captureBox = document.getElementById('captureBox');
+
+// ========== 可调节参数 ==========
+const baseTop = 55;
+const baseLeft = 20;
+const lineGap = 35;
+
+const top1 = baseTop;
+const top2 = top1 + lineGap;
+const top3 = top2 + lineGap;
+const top4 = top3 + lineGap;
+const top5 = top4 + lineGap;
+
+// ================= 正面卡片 =================
+const frontHTML = `
+    <div class="cardinfo">
+        <div class="card">
+            <img src="./1/xt3.png" class="card-bg" />
+
+            <div class="front-text" style="top:${top1}px; left:${baseLeft}px;">
+                <span>姓&emsp;名: <span id="previewName">${formState.name}</span></span>
+                <span style="margin-left:20px;">性&emsp;别: <span id="previewGender">${formState.gender}</span></span>
+            </div>
+
+            <div class="front-text" style="top:${top2}px; left:${baseLeft}px;">证件编号: <span id="previewNumber">${formState.number}</span></div>
+            <div class="front-text" style="top:${top3}px; left:${baseLeft}px;">工种: <span id="previewCategory">${formState.category}</span></div>
+            <div class="front-text" style="top:${top4}px; left:${baseLeft}px;">发证地址:<span id="previewOrg"> ${formState.org}</span></div>
+            <div class="front-text" style="top:${top5}px; left:${baseLeft}px;">检查日期: <span id="previewDate">${formState.examTime}</span>&emsp;(有效期一年)</div>
+
+            <img id="headImgFront" src="./temp/1.png" class="headimg" />
+            <img src="./1/xt23.png" class="ygqimg"/>
+        </div>
+    </div>
+`;
+
+// ================= 背面卡片 =================
+const backHTML = `
+    <div class="cardinfo-r">
+        <div class="card-r">
+            <div class="top">&nbsp;</div>
+            <div class="title">&nbsp;</div>
+            <div class="card-ctx">
+                <div class="qrcode-wrap" id="qrContainer"></div>
+                <div class="card-ctx-desc">
+                    从业人员健康合格证明<br>
+                    广州市增城区新塘医院制
+                </div>
+            </div>
+            <div class="sign"><div class="first"></div><div class="data"></div></div>
+            <div class="bottom"></div>
+        </div>
+    </div>
+`;
+
+// 组装：外层 paddingLeft/Right 控制左右留白，内层上下空白div控制顶部底部留白
+captureBox.innerHTML = `
+    <div style="padding:0 20px;">
+        <div style="height:20px;"></div>
+        ${frontHTML}
+        ${backHTML}
+        <div style="height:20px;"></div>
+    </div>
+`;
+        function setStatus(msg, isError = false) {
+            const el = document.getElementById('statusMessage');
+            el.textContent = msg;
+            el.style.color = isError ? '#e74c3c' : '#555';
+        }
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast' + (isError ? ' error' : '');
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+
+        function getQrUrl() {
+            return qrUrlBase + '&id=' + encodeURIComponent(formState.certId);
+        }
+
+        function syncCard() {
+            document.getElementById('previewNumber').textContent = formState.number;
+            document.getElementById('previewName').textContent = formState.name;
+            document.getElementById('previewGender').textContent = formState.gender;
+            document.getElementById('previewCategory').textContent = formState.category;
+            document.getElementById('previewDate').textContent = formState.examTime;
+            document.getElementById('previewOrg').textContent = ' ' + formState.org;
+            return initQR(getQrUrl());
+        }
+
+        async function updatePreview() {
+            await syncCard();
+            await waitForImages();
+            await new Promise(resolve => setTimeout(resolve, 100));
+            finalDataUrl = await captureCard();
+            setStatus('预览已更新，点击“生成并提交”保存');
+            document.getElementById('androidBtn').disabled = false;
+            document.getElementById('iosBtn').disabled = false;
+        }
+
+        function schedulePreview() {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(() => updatePreview().catch(error => setStatus('预览失败：' + error.message, true)), 180);
+        }
+
+        // 等待所有图片加载（包括背景、印章、头像、二维码图片、注意事项图片）
+        function waitForImages() {
+            const imgs = document.querySelectorAll('#captureBox img');
+            const promises = [];
+            imgs.forEach(img => {
+                if (!img.complete) {
+                    promises.push(new Promise((resolve) => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                        setTimeout(resolve, 5000);
+                    }));
+                }
+            });
+            return Promise.all(promises);
+        }
+
+        // 生成二维码图片并插入容器
+        function initQR(url) {
+            return new Promise((resolve) => {
+                const qrcodeEl = document.getElementById('qrContainer');
+            if (!url || typeof QRCode === 'undefined') {
+                    console.warn('QRCode 库未加载或 QR URL 为空');
+                    return resolve();
+                }
+                QRCode.toDataURL(url, {
+                    width: 70,
+                    margin: 0,
+                    color: { dark: '#000000', light: '#ffffff' }
+                }, function (err, url) {
+                    if (err) {
+                        console.error('二维码生成失败:', err);
+                        return resolve();
+                    }
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = () => {
+                        qrcodeEl.innerHTML = '';
+                        qrcodeEl.appendChild(img);
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        console.error('二维码图片加载失败');
+                        resolve();
+                    };
+                    setTimeout(resolve, 3000);
+                });
+            });
+        }
+
+        // 截图并压缩
+        async function captureCard() {
+            const element = document.getElementById('captureBox');
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+            // 压缩图片
+            const maxWidth = 1000;
+            let w = canvas.width, h = canvas.height;
+            if (w > maxWidth) {
+                h = Math.round(h * maxWidth / w);
+                w = maxWidth;
+            }
+            const compressCanvas = document.createElement('canvas');
+            compressCanvas.width = w;
+            compressCanvas.height = h;
+            const ctx = compressCanvas.getContext('2d');
+            ctx.drawImage(canvas, 0, 0, w, h);
+            return compressCanvas.toDataURL('image/jpeg', 0.7);
+        }
+
+        // 上传（带重试）
+        async function uploadWithRetry(dataUrl, retry = 2) {
+            for (let i = 0; i <= retry; i++) {
+                try {
+                    const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'cert_id=' + encodeURIComponent(formState.certId) +
+                            '&exam_date=' + encodeURIComponent(formState.examTime) +
+                            '&image_data=' + encodeURIComponent(dataUrl)
+                    });
+                    const data = await resp.json();
+                    if (data.ok) return true;
+                    if (i < retry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+                    throw new Error(data.msg || '服务器返回失败');
+                } catch (e) {
+                    if (i < retry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+                    throw e;
+                }
+            }
+        }
+
+        function download() {
+            if (!finalDataUrl) return showToast('图片未生成', true);
+            const a = document.createElement('a');
+            a.href = finalDataUrl;
+            a.download = formState.name + '_佛山健康证.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        function preview() {
+            if (!finalDataUrl) return showToast('图片未生成', true);
+            document.getElementById('modalImg').src = finalDataUrl;
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        async function submitCertificate(event) {
+            event.preventDefault();
+            if (!event.currentTarget.reportValidity()) return;
+            const button = document.getElementById('generateBtn');
+            button.disabled = true;
+            try {
+                await updatePreview();
+                setStatus('正在上传云端（请稍候）...');
+                await uploadWithRetry(finalDataUrl);
+                setStatus('保存成功，可以下载了 ✓');
+                showToast('云端保存成功');
+            } catch (e) {
+                setStatus('上传失败：' + e.message, true);
+                showToast('保存失败，请刷新页面重试', true);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function loadSelectedAvatar(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                if (file) showToast('请选择图片文件', true);
+                return;
+            }
+            const photo = document.getElementById('headImgFront');
+            photo.src = URL.createObjectURL(file);
+            await new Promise(resolve => { photo.onload = resolve; photo.onerror = resolve; });
+            schedulePreview();
+        }
+
+        async function init() {
+            try {
+                document.getElementById('orgInput').value = formState.org;
+                document.getElementById('nameInput').value = formState.name;
+                document.getElementById('categoryInput').value = formState.category;
+                document.getElementById('examTimeInput').value = formState.examTime;
+                document.getElementById('certIdInput').value = formState.certId;
+                document.getElementById('numberInput').value = formState.number;
+                await updatePreview();
+            } catch (e) {
+                setStatus('预览失败：' + e.message, true);
+                showToast('预览加载失败，请刷新页面重试', true);
+            }
+        }
+
+        document.getElementById('certForm').addEventListener('submit', submitCertificate);
+        document.getElementById('randomNumberBtn').addEventListener('click', () => {
+            formState.number = generateNumber();
+            document.getElementById('numberInput').value = formState.number;
+            schedulePreview();
+        });
+        document.getElementById('avatarInput').addEventListener('change', event => loadSelectedAvatar(event.target.files[0]));
+        const avatarDrop = document.getElementById('avatarDrop');
+        avatarDrop.addEventListener('click', () => document.getElementById('avatarInput').click());
+        avatarDrop.addEventListener('dragover', event => { event.preventDefault(); avatarDrop.classList.add('dragover'); });
+        avatarDrop.addEventListener('dragleave', () => avatarDrop.classList.remove('dragover'));
+        avatarDrop.addEventListener('drop', event => {
+            event.preventDefault();
+            avatarDrop.classList.remove('dragover');
+            loadSelectedAvatar(event.dataTransfer.files[0]);
+        });
+        document.getElementById('orgInput').addEventListener('input', event => { formState.org = event.target.value; schedulePreview(); });
+        document.getElementById('nameInput').addEventListener('input', event => { formState.name = event.target.value; schedulePreview(); });
+        document.getElementById('categoryInput').addEventListener('input', event => { formState.category = event.target.value; schedulePreview(); });
+        document.getElementById('examTimeInput').addEventListener('input', event => { formState.examTime = event.target.value; schedulePreview(); });
+        document.getElementById('certIdInput').addEventListener('input', event => {
+            event.target.value = event.target.value.replace(/\D/g, '');
+            formState.certId = event.target.value;
+            schedulePreview();
+        });
+
+        document.getElementById('androidBtn').onclick = download;
+        document.getElementById('iosBtn').onclick = () => {
+            if (isIOS) preview();
+            else download();
+        };
+
+        window.addEventListener('load', init);
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

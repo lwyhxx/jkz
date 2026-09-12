@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模板跳转</title>
+</head>
+<body>
+<p style="font-family:Microsoft YaHei;text-align:center;margin-top:20vh">正在打开模板…</p>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const id = Number(params.get('z'));
+  if (!Number.isInteger(id) || id < 1) {
+    document.body.innerHTML = '<p style="font-family:Microsoft YaHei;text-align:center;margin-top:20vh">缺少有效的模板编号</p>';
+    return;
+  }
+  // 原 index1.php 的服务端路由改为纯 HTML 客户端路由
+  location.replace('moban/jkz_moban_index' + id + '.html');
+})();
+</script>
+</body>
+</html>

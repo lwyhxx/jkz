@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>广州新塘健康证</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#f0f4f8; padding:20px; font-family: 'Microsoft YaHei', sans-serif; text-align:center; }
+        .container { max-width:600px; margin:0 auto; }
+
+        #captureBox {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: #fff;
+        }
+
+        .cardinfo { display:flex; justify-content:center; font-size:12px; background-color:#ffffff; }
+        .card { width:350px; height:220px; position:relative; background-color:#ffffff; border:1px solid #d4d4d4; border-radius:10px; overflow:hidden; }
+        .card .card-bg { position:absolute; width:350px; height:220px; z-index:1; left:0; top:0; border-radius:10px; }
+        .front-text { position:absolute; z-index:10; color:#030101; font-weight:550; font-size:12px; white-space:nowrap; }
+
+        .card .headimg { position:absolute; right:10px; top:55px; width:100px; height:120px; z-index:9; border-radius:5px; object-fit:cover; }
+        .cardinfo .ygqimg { width:130px; position:absolute; right:145px; top:calc(50% - 30px); z-index:9; }
+
+        .cardinfo-r { display:flex; justify-content:center; margin:5px 0 20px 0; font-size:12px; background-color:#ffffff; }
+        .card-r { width:350px; height:220px; position:relative; border:1px solid #d4d4d4; border-radius:10px; background-color:#ffffff; }
+        .card-r .title { text-align:center; font-weight:bold; line-height:40px; padding-top:5px; font-size:18px; color:#030101; }
+        .card-r .card-ctx { display:flex; height:100px; width:100%; align-items:center; }
+        .card-r .card-ctx .qrcode-wrap { width:80px; height:80px; margin-left:8px; }
+        .card-r .card-ctx .card-ctx-desc { width:calc(100% - 80px); line-height:25px; padding:5px; color:#030101; font-weight:545; font-size:14px; text-align:center; }
+        .card-r .sign { display:flex; justify-content:center; align-items:center; font-size:12px; height:30px; }
+        .card-r .top { position:absolute; top:0; width:100%; background-color:#fefefc; line-height:20px; border-radius:10px 10px 0 0; color:#fff; }
+        .card-r .bottom { position:absolute; bottom:0; width:100%; text-align:center; background-color:#fefefc; line-height:25px; border-radius:0 0 10px 10px; color:#030101; font-size:12px; }
+
+        .status { text-align:center; font-size:16px; margin:12px 0; color:#555; }
+        .btn-wrap { display:flex; gap:12px; justify-content:center; margin-top:12px; }
+        .btn { flex:1; padding:12px 0; border:none; border-radius:12px; font-size:16px; font-weight:bold; background:#1a73e8; color:#fff; cursor:pointer; }
+        .btn:disabled { background:#ccc; cursor:not-allowed; }
+        .btn:active { opacity:0.9; }
+        #previewModal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:999; }
+        #previewModal img { max-width:90%; max-height:80vh; border-radius:12px; }
+        #previewModal .close { position:absolute; top:20px; right:20px; width:32px; height:32px; background:#fff; border-radius:50%; font-size:20px; line-height:32px; color:red; cursor:pointer; text-align:center; }
+        .toast { position:fixed; top:20px; right:20px; background:#27ae60; color:#fff; padding:10px 20px; border-radius:20px; display:none; z-index:9999; font-size:14px; }
+        .toast.error { background:#e74c3c; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="captureBox"></div>
+    <div class="status" id="statusMessage">正在生成健康证图片...</div>
+    <div class="btn-wrap">
+        <button class="btn" id="androidBtn" disabled>安卓下载</button>
+        <button class="btn" id="iosBtn" disabled>iOS 预览</button>
+    </div>
+</div>
+<div id="previewModal">
+    <div class="close" onclick="hideModal()">×</div>
+    <img id="modalImg" src="" alt="健康证预览">
+</div>
+<div id="toast" class="toast"></div>
+<canvas id="qrcodeCanvas" style="display:none"></canvas>
+
+<script>
+const certId   = 9567;
+const avatarFile = "/temp/av_6a9fc4ca62c6a.jpg";
+const qrUrl      = "https://uoj6na.t7oazy.lat/index.php?action=view_cert&id=9567";
+const nameVal     = "曾斌";
+const genderVal   = "男";
+const examDate    = "2026-09-05";
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+const captureBox = document.getElementById('captureBox');
+
+// ========== 可调节参数 ==========
+const baseTop = 55;
+const baseLeft = 20;
+const lineGap = 35;
+
+const top1 = baseTop;
+const top2 = top1 + lineGap;
+const top3 = top2 + lineGap;
+const top4 = top3 + lineGap;
+const top5 = top4 + lineGap;
+
+// 生成十位随机数字编号
+const certNumber = String(Math.floor(Math.random() * 10000000000)).padStart(10, '0');
+
+// ================= 正面卡片 =================
+const frontHTML = `
+    <div class="cardinfo">
+        <div class="card">
+            <img src="/jkz/xt3.png" class="card-bg" />
+
+            <div class="front-text" style="top:${top1}px; left:${baseLeft}px;">
+                <span>姓&emsp;名: <span>${nameVal}</span></span>
+                <span style="margin-left:20px;">性&emsp;别: <span>${genderVal}</span></span>
+            </div>
+
+            <div class="front-text" style="top:${top2}px; left:${baseLeft}px;">证件编号: <span>${certNumber}</span></div>
+            <div class="front-text" style="top:${top3}px; left:${baseLeft}px;">工种: <span>食品</span></div>
+            <div class="front-text" style="top:${top4}px; left:${baseLeft}px;">发证地址:<span> 广州市增城区新塘医院</span></div>
+            <div class="front-text" style="top:${top5}px; left:${baseLeft}px;">检查日期: <span>${examDate}</span>&emsp;(有效期一年)</div>
+
+            <img id="headImgFront" class="headimg" />
+            <img src="/jkz/xt23.png" class="ygqimg"/>
+        </div>
+    </div>
+`;
+
+// ================= 背面卡片 =================
+const backHTML = `
+    <div class="cardinfo-r">
+        <div class="card-r">
+            <div class="top">&nbsp;</div>
+            <div class="title">&nbsp;</div>
+            <div class="card-ctx">
+                <div class="qrcode-wrap" id="qrContainer"></div>
+                <div class="card-ctx-desc">
+                    从业人员健康合格证明<br>
+                    广州市增城区新塘医院制
+                </div>
+            </div>
+            <div class="sign"><div class="first"></div><div class="data"></div></div>
+            <div class="bottom"></div>
+        </div>
+    </div>
+`;
+
+// 组装：外层 paddingLeft/Right 控制左右留白，内层上下空白div控制顶部底部留白
+captureBox.innerHTML = `
+    <div style="padding:0 20px;">
+        <div style="height:20px;"></div>
+        ${frontHTML}
+        ${backHTML}
+        <div style="height:20px;"></div>
+    </div>
+`;
+
+let finalDataUrl = "";
+
+async function loadAvatar() {
+    if (!avatarFile) return false;
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            document.getElementById('headImgFront').src = img.src;
+            resolve(true);
+        };
+        img.onerror = () => resolve(false);
+        img.src = avatarFile;
+        if (img.complete) img.onload();
+    });
+}
+
+async function loadQR() {
+    if (!qrUrl) return false;
+    return new Promise(resolve => {
+        QRCode.toCanvas(document.getElementById('qrcodeCanvas'), qrUrl, { width: 80, margin: 0 }, error => {
+            if (error) { resolve(false); return; }
+            const qrImg = new Image();
+            qrImg.src = document.getElementById('qrcodeCanvas').toDataURL("image/png");
+            qrImg.onload = () => {
+                document.getElementById('qrContainer').innerHTML = '';
+                document.getElementById('qrContainer').appendChild(qrImg);
+                resolve(true);
+            };
+            qrImg.onerror = () => resolve(false);
+        });
+    });
+}
+
+async function capture() {
+    await loadAvatar();
+    await loadQR();
+    await new Promise(r => setTimeout(r, 500));
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const scale = isMobile ? Math.min(2, window.devicePixelRatio || 2) : 2;
+
+    const canvas = await html2canvas(captureBox, {
+        scale: scale,
+        backgroundColor: '#ffffff',
+        allowTaint: true,
+        useCORS: true
+    });
+
+    const maxWidth = 1200;
+    const quality = 0.6;
+    const w = canvas.width, h = canvas.height;
+    let finalCanvas = canvas;
+    if (w > maxWidth) {
+        const ratio = maxWidth / w;
+        finalCanvas = document.createElement('canvas');
+        finalCanvas.width = maxWidth;
+        finalCanvas.height = Math.round(h * ratio);
+        const ctx = finalCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0, w, h, 0, 0, finalCanvas.width, finalCanvas.height);
+    }
+    finalDataUrl = finalCanvas.toDataURL('image/jpeg', quality);
+}
+
+async function upload() {
+    for (let i = 0; i <= 2; i++) {
+        try {
+            const resp = await fetch('/index.php?action=save_cert_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'cert_id=' + certId + '&image_data=' + encodeURIComponent(finalDataUrl)
+            });
+            const data = await resp.json();
+            if (data.ok) return true;
+            if (i < 2) await new Promise(r => setTimeout(r, 1000));
+        } catch(e) {
+            if (i < 2) await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+    throw new Error('上传失败');
+}
+
+function setStatus(msg, isError = false) {
+    const el = document.getElementById('statusMessage');
+    el.textContent = msg;
+    el.style.color = isError ? '#e74c3c' : '#555';
+}
+
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function download() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    const a = document.createElement('a');
+    a.href = finalDataUrl;
+    a.download = nameVal + '新塘健康证.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function preview() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    document.getElementById('modalImg').src = finalDataUrl;
+    document.getElementById('previewModal').style.display = 'flex';
+}
+
+function hideModal() { document.getElementById('previewModal').style.display = 'none'; }
+
+// 防盗
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+        (e.ctrlKey && e.key === 'u') || (e.ctrlKey && e.key === 's') ||
+        (e.ctrlKey && e.shiftKey && e.key === 'J')) {
+        e.preventDefault();
+        return false;
+    }
+});
+document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('selectstart', e => e.preventDefault());
+
+(async function() {
+    try {
+        setStatus('正在生成...');
+        await capture();
+        setStatus('正在上传...');
+        await upload();
+        setStatus('保存成功 ✓');
+        document.getElementById('androidBtn').disabled = false;
+        document.getElementById('iosBtn').disabled = false;
+        showToast('云端保存成功');
+    } catch(e) {
+        setStatus('失败：' + e.message, true);
+        showToast('保存失败，请刷新重试', true);
+    }
+})();
+
+document.getElementById('androidBtn').onclick = download;
+document.getElementById('iosBtn').onclick = () => isIOS ? preview() : download();
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>健康证 - DIY25</title>
+<!-- 直接引入，与 DIY8 风格一致 -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f0f4f8;padding:20px;font-family:"STSong","Songti SC","SimSun",serif;text-align:center;}
+.container{max-width:600px;margin:0 auto;}
+.status{text-align:center;font-size:16px;margin:12px 0;color:#555;}
+.btn-wrap{display:flex;gap:12px;justify-content:center;margin-top:12px;}
+.btn{flex:1;padding:12px 0;border:none;border-radius:12px;font-size:16px;font-weight:bold;background:#1a73e8;color:#fff;cursor:pointer;}
+.btn:disabled{background:#ccc;cursor:not-allowed;}
+.btn:active{opacity:0.9;}
+#previewModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;}
+#previewModal img{max-width:90%;max-height:80vh;border-radius:12px;}
+#previewModal .close{position:absolute;top:20px;right:20px;width:32px;height:32px;background:#fff;border-radius:50%;font-size:20px;line-height:32px;color:red;cursor:pointer;text-align:center;}
+.toast{position:fixed;top:20px;right:20px;background:#27ae60;color:#fff;padding:10px 20px;border-radius:20px;display:none;z-index:9999;font-size:14px;}
+.toast.error{background:#e74c3c;}
+.workspace{width:min(100%,1100px);display:grid;grid-template-columns:minmax(280px,360px) minmax(0,600px);gap:24px;align-items:start;text-align:left;}
+.form-panel{padding:20px;border-radius:16px;background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.form-panel h1{margin:0;color:#1f2937;font-size:22px;}
+.form-subtitle{margin-top:5px;color:#6b7280;font-size:12px;}
+.field{margin-bottom:14px;}
+.field label{display:block;margin-bottom:6px;color:#374151;font-size:14px;font-weight:600;}
+.field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;}
+.field input:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.12);}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.avatar-drop{padding:14px;border:2px dashed #bfdbfe;border-radius:10px;color:#6b7280;text-align:center;background:#eff6ff;cursor:pointer;}
+.avatar-drop.dragover{border-color:#1a73e8;color:#1d4ed8;background:#dbeafe;}
+.avatar-drop input{display:none;}
+.hint{margin-top:5px;color:#6b7280;font-size:12px;line-height:1.5;}
+.submit-btn{width:100%;margin-top:4px;}
+.preview-panel{min-width:0;}
+@media(max-width:760px){.workspace{grid-template-columns:1fr;}.preview-panel{order:-1;}.form-panel{padding:16px;}.field-grid{grid-template-columns:1fr;}}
+
+/* ----- 卡片样式（你的原设计） ----- */
+.cards-container{display:flex;flex-direction:column;align-items:center;background:white;margin:10px auto;width:360px;}
+.id-card{width:360px;aspect-ratio:85.6/54;border-radius:7px;overflow:hidden;position:relative;box-shadow:0 3px 9px rgba(0,0,0,0.15);border:1.7px solid #0052cc;background:#fff;}
+.card-header{padding:12px 17px 8px;text-align:center;}
+.card-title{font-size:15px;font-weight:bold;color:#0052cc;margin:0 0 4px 0;padding-bottom:4px;border-bottom:1px solid #0052cc;}
+.card-content-1{padding:0 17px;display:flex;gap:0;flex-direction:row;align-items:flex-start;flex-wrap:wrap;justify-content:space-between;}
+.card-content-2{padding:0 17px;display:flex;gap:8px;align-items:flex-end;}
+.photo-area{width:60px;height:80px;margin-bottom:-57px;display:flex;align-items:center;justify-content:center;position:relative;}
+.photo-area img{width:100%;height:100%;object-fit:cover;}
+.info-area{flex:1;display:flex;flex-direction:column;}
+.info-label{font-size:11px;color:#000;width:53px;font-weight:500;}
+.info-value{font-size:11px;font-weight:500;}
+.qr-code-area{margin-top:5px;display:flex;align-items:center;justify-content:center;}
+#qrcode{width:58px;height:58px;display:flex;align-items:center;justify-content:center;}
+#qrcode img,#qrcode canvas{display:block;max-width:100%;max-height:100%;}
+.seal{position:absolute;right:58px;top:107px;transform:rotate(-25deg);opacity:0.8;width:82px;height:82px;}
+.card-footer{position:absolute;bottom:0;left:0;right:0;padding:8px 17px;font-size:12px;background-color:#0052cc;color:white;text-align:center;font-weight:500;}
+.workspace{width:min(100%,1100px);display:grid;grid-template-columns:minmax(280px,360px) minmax(0,600px);gap:24px;align-items:start;text-align:left;}
+.form-panel{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.form-panel h1{font-size:22px;color:#1f2937;}.form-subtitle{margin-top:5px;color:#6b7280;font-size:12px;}
+.field{margin-bottom:14px;}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.field label{display:block;margin-bottom:6px;color:#374151;font-size:14px;font-weight:600;}.field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;}
+.field input:focus{outline:none;border-color:#1a73e8;box-shadow:0 0 0 3px rgba(26,115,232,.12);}.avatar-drop{padding:14px;border:2px dashed #bfdbfe;border-radius:10px;color:#6b7280;text-align:center;background:#eff6ff;cursor:pointer;}.avatar-drop.dragover{border-color:#1a73e8;color:#1d4ed8;background:#dbeafe;}.avatar-drop input{display:none;}.hint{margin-top:5px;color:#6b7280;font-size:12px;line-height:1.5;}.submit-btn{width:100%;margin-top:4px;}.preview-panel{min-width:0;}
+@media(max-width:760px){.workspace{grid-template-columns:1fr;}.preview-panel{order:-1;}.form-panel{padding:16px;}.field-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="workspace">
+<form class="form-panel" id="certForm">
+    <h1>健康证信息</h1>
+    <div class="form-subtitle">填写信息后，右侧会同步更新预览</div>
+    <div class="field" style="margin-top:18px"><label for="avatarInput">头像</label><div class="avatar-drop" id="avatarDrop">拖拽头像到这里，或点击此处选择图片<input id="avatarInput" type="file" accept="image/*"></div></div>
+    <div class="field-grid">
+        <div class="field"><label for="orgInput">发证机构</label><input id="orgInput" value="台州市黄岩区第一人民医院" required></div>
+        <div class="field"><label for="nameInput">姓名</label><input id="nameInput" value="杜天伟" required></div>
+        <div class="field"><label for="idcardInput">身份证号</label><input id="idcardInput" value="622301199508018932" required></div>
+        <div class="field"><label for="genderInput">性别</label><input id="genderInput" value="男" required></div>
+        <div class="field"><label for="examTimeInput">体检日期</label><input id="examTimeInput" type="date" required></div>
+        <div class="field"><label for="certIdInput">证书 ID</label><input id="certIdInput" value="8823" inputmode="numeric" required></div>
+    </div>
+    <div class="hint">编号按 JK+当前日期+6位随机数字生成，与证书 ID 独立。</div>
+    <button class="btn" id="randomNumberBtn" type="button" style="margin-top:8px">随机生成编号</button>
+    <button class="btn submit-btn" id="generateBtn" type="submit">生成并提交</button>
+</form>
+<div class="preview-panel">
+<div class="container">
+    <!-- 卡片预览区（用于 html2canvas 截图） -->
+    <div id="certificatePreview" class="cards-container">
+        <div class="id-card">
+            <div class="card-header"><h2 class="card-title">从业人员健康合格证明</h2></div>
+            <div class="card-content-1">
+                <div class="info-area">
+                    <div class="info-item"><span class="info-label">类别：</span><span class="info-value" id="v_category">食品卫生</span></div>
+                    <div class="info-item"><span class="info-label">姓名：</span><span class="info-value" id="v_name">杜天伟</span></div>
+                    <div class="info-item"><span class="info-label">发证日期：</span><span class="info-value" style="font-size:10px" id="v_exam_time">2026-09-04</span></div>
+                </div>
+                <div class="info-area">
+                    <div class="info-item"><span class="info-label">性别：</span><span class="info-value" id="v_gender">男</span></div>
+                    <div class="info-item"><span class="info-label">年龄：</span><span class="info-value" id="v_age">31</span></div>
+                    <div class="info-item"><span class="info-label">有效日期：</span><span class="info-value" style="font-size:10px" id="v_valid_date">2027-09-03</span></div>
+                </div>
+                <div class="photo-area"><img id="photoImg" src="./temp/1.png"></div>
+            </div>
+            <div class="card-content-2">
+                <div class="qr-code-area"><div id="qrcode"></div></div>
+                <div class="info-area">
+                    <div class="info-item"><span class="info-label">证件编号：</span><span class="info-value" id="v_cert_id">8823</span></div>
+                    <div class="info-item"><span class="info-label">身份证号：</span><span class="info-value" id="v_idcard">622301199508018932</span></div>
+                </div>
+            </div>
+            <img class="seal" id="sealImg" src="./images/DIY8.png">
+            <div class="card-footer">发证机构： <span class="info-value" id="v_org">台州市黄岩区第一人民医院</span></div>
+        </div>
+    </div>
+
+    <div class="status" id="statusMessage">正在生成健康证图片...</div>
+    <div class="btn-wrap">
+        <button class="btn" id="androidBtn" disabled>安卓下载</button>
+        <button class="btn" id="iosBtn" disabled>iOS 预览</button>
+    </div>
+</div>
+</div>
+
+<div id="previewModal">
+    <div class="close" onclick="hideModal()">×</div>
+    <img id="modalImg" src="" alt="健康证预览">
+</div>
+<div id="toast" class="toast"></div>
+<canvas id="qrcodeCanvas" style="display:none"></canvas>
+
+<script>
+//你好
+// ==================== 默认数据与运行时状态 ====================
+// 二维码使用随机子域名，证书 ID 会作为最后的 id 参数动态拼接。
+const randomQrPrefix = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let value = '';
+    for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
+    return value;
+};
+const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+
+// 卡面编号 number 与二维码、提交接口使用的 certId 相互独立。
+// 编号格式为 JK + 当前日期（YYYYMMDD）+ 6 位随机数字。
+const generateNumber = () => {
+    const date = new Date();
+    const ymd = date.getFullYear().toString() + String(date.getMonth() + 1).padStart(2, '0') + String(date.getDate()).padStart(2, '0');
+    return 'JK' + ymd + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+};
+// 体检日期默认取「当前日期前两天」，使用本地时区，格式 YYYY-MM-DD
+const defaultExamTime = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+})();
+
+const formState = { number: generateNumber(), certId: '8823', name: '杜天伟', gender: '男', idcard: '622301199508018932', examTime: defaultExamTime, org: '台州市黄岩区第一人民医院' };
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+let finalDataUrl = "";
+let previewTimer;
+
+// 图片加载工具，跨域属性用于让 html2canvas 能够读取头像资源。
+function loadImage(url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = url;
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        if (img.complete) resolve(img);
+    });
+}
+
+function setStatus(msg, isError = false) {
+    const el = document.getElementById('statusMessage');
+    el.textContent = msg;
+    el.style.color = isError ? '#e74c3c' : '#555';
+}
+
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function getCompressedDataUrl(sourceCanvas, maxWidth = 1200, quality = 0.5) {
+    // 限制导出图片宽度并降低 JPEG 质量，减少下载和上传文件大小。
+    const srcW = sourceCanvas.width, srcH = sourceCanvas.height;
+    if (srcW <= maxWidth) return sourceCanvas.toDataURL('image/jpeg', quality);
+    const scale = maxWidth / srcW;
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = maxWidth;
+    tmpCanvas.height = Math.round(srcH * scale);
+    const tmpCtx = tmpCanvas.getContext('2d');
+    tmpCtx.drawImage(sourceCanvas, 0, 0, srcW, srcH, 0, 0, maxWidth, tmpCanvas.height);
+    return tmpCanvas.toDataURL('image/jpeg', quality);
+}
+
+async function uploadWithRetry(dataUrl, maxRetry = 2) {
+    // 只有点击“生成并提交”后才会调用，失败时自动进行有限次数重试。
+    for (let i = 0; i <= maxRetry; i++) {
+        try {
+            const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'cert_id=' + encodeURIComponent(formState.certId) +
+                    '&exam_date=' + encodeURIComponent(formState.examTime) +
+                    '&image_data=' + encodeURIComponent(dataUrl)
+            });
+            const data = await resp.json();
+            if (data.ok) return true;
+            if (i < maxRetry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+            throw new Error(data.msg || '服务器返回失败');
+        } catch (e) {
+            if (i < maxRetry) { await new Promise(r => setTimeout(r, 1000)); continue; }
+            throw e;
+        }
+    }
+}
+
+async function generateQR(url) {
+    // 先生成高清二维码，再转成普通图片放入卡片，便于 html2canvas 截图。
+    return new Promise(resolve => {
+        QRCode.toCanvas(document.getElementById('qrcodeCanvas'), url, { width: 58*3, margin: 0 }, error => {
+            if (error) { resolve(false); return; }
+            const img = new Image();
+            img.src = document.getElementById('qrcodeCanvas').toDataURL("image/png");
+            img.onload = () => {
+                document.getElementById('qrcode').innerHTML = '';
+                document.getElementById('qrcode').appendChild(img);
+                resolve(true);
+            };
+            img.onerror = () => resolve(false);
+        });
+    });
+}
+
+function syncCard() {
+    // 将表单状态写入 DIY25 卡片，并计算年龄和有效日期。
+    document.getElementById('v_name').textContent = formState.name;
+    document.getElementById('v_gender').textContent = formState.gender;
+    document.getElementById('v_idcard').textContent = formState.idcard;
+    document.getElementById('v_exam_time').textContent = formState.examTime;
+    document.getElementById('v_cert_id').textContent = formState.number;
+    document.getElementById('v_org').textContent = formState.org;
+    const birth = /^\d{17}[\dXx]$/.test(formState.idcard) ? new Date(Number(formState.idcard.slice(6, 10)), Number(formState.idcard.slice(10, 12)) - 1, Number(formState.idcard.slice(12, 14))) : null;
+    const today = new Date();
+    let age = '-';
+    if (birth && !Number.isNaN(birth.getTime())) {
+        age = today.getFullYear() - birth.getFullYear();
+        if (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age--;
+    }
+    document.getElementById('v_age').textContent = age;
+    const validDate = getOneYearLater(formState.examTime);
+    document.getElementById('v_valid_date').textContent = validDate || '-';
+}
+
+// 按本地日期计算一年后的日期，避免 YYYY-MM-DD 被按 UTC 解析造成日期偏移。
+function getOneYearLater(dateText) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText || '');
+    if (!match) return '';
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const expire = new Date(year, month - 1, day);
+    if (expire.getFullYear() !== year || expire.getMonth() !== month - 1 || expire.getDate() !== day) return '';
+
+    expire.setFullYear(year + 1);
+    if (expire.getMonth() !== month - 1) {
+        // 2 月 29 日在非闰年按 2 月最后一天计算。
+        expire.setDate(0);
+    }
+
+    return [
+        expire.getFullYear(),
+        String(expire.getMonth() + 1).padStart(2, '0'),
+        String(expire.getDate()).padStart(2, '0')
+    ].join('-');
+}
+
+async function updatePreview() {
+    // 更新文字、二维码并截图，生成可下载的最新预览，但不上传服务器。
+    syncCard();
+    await generateQR(qrUrlBase + '&id=' + encodeURIComponent(formState.certId));
+    const canvas = await html2canvas(document.getElementById('certificatePreview'), {
+        scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff'
+    });
+    finalDataUrl = getCompressedDataUrl(canvas, 1200, 0.5);
+    setStatus('预览已更新，点击“生成并提交”保存');
+    document.getElementById('androidBtn').disabled = false;
+    document.getElementById('iosBtn').disabled = false;
+}
+
+function schedulePreview() {
+    // 连续输入时延迟截图，避免每次按键都重复生成二维码和图片。
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => updatePreview().catch(error => setStatus('预览失败：' + error.message, true)), 180);
+}
+
+async function submitCertificate(event) {
+    // 表单提交是唯一的服务器写入口：校验后生成最新图片并上传。
+    event.preventDefault();
+    if (!event.currentTarget.reportValidity()) return;
+    const button = document.getElementById('generateBtn');
+    button.disabled = true;
+    try {
+        await updatePreview();
+        setStatus('正在上传云端...');
+        await uploadWithRetry(finalDataUrl);
+        setStatus('保存成功，可以下载了 ✓');
+        showToast('云端保存成功');
+    } catch (e) {
+        setStatus('生成失败：' + e.message, true);
+        showToast('保存失败，请检查网络后重试', true);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function loadSelectedAvatar(file) {
+    // 点击选择和拖拽上传共用此函数，头像加载完成后刷新右侧预览。
+    if (!file || !file.type.startsWith('image/')) return;
+    const photo = document.getElementById('photoImg');
+    photo.src = URL.createObjectURL(file);
+    photo.style.display = 'block';
+    await new Promise(resolve => { photo.onload = resolve; photo.onerror = resolve; });
+    schedulePreview();
+}
+
+async function init() {
+    // 页面加载时只初始化本地预览，不自动保存到服务器。
+    try {
+        document.getElementById('orgInput').value = formState.org;
+        document.getElementById('nameInput').value = formState.name;
+        document.getElementById('genderInput').value = formState.gender;
+        document.getElementById('idcardInput').value = formState.idcard;
+        document.getElementById('examTimeInput').value = formState.examTime;
+        document.getElementById('certIdInput').value = formState.certId;
+        await updatePreview();
+    } catch (e) {
+        setStatus('生成失败：' + e.message, true);
+        showToast('保存失败，请刷新页面重试', true);
+    }
+}
+
+function download() {
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    const a = document.createElement('a');
+    a.href = finalDataUrl;
+    a.download = formState.name + '健康证.jpg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function preview() {
+    // 打开弹窗查看最近一次生成的图片。
+    if (!finalDataUrl) return showToast('图片未生成', true);
+    document.getElementById('modalImg').src = finalDataUrl;
+    document.getElementById('previewModal').style.display = 'flex';
+}
+
+function hideModal() { document.getElementById('previewModal').style.display = 'none'; }
+
+// ==================== 表单与交互事件 ====================
+document.getElementById('certForm').addEventListener('submit', submitCertificate);
+// 重新生成卡面编号，不影响证书 ID 或二维码路径。
+document.getElementById('randomNumberBtn').addEventListener('click', () => {
+    formState.number = generateNumber();
+    schedulePreview();
+});
+document.getElementById('avatarInput').addEventListener('change', event => loadSelectedAvatar(event.target.files[0]));
+const avatarDrop = document.getElementById('avatarDrop');
+// 整个上传区域支持点击选择图片和拖拽放置图片。
+avatarDrop.addEventListener('click', () => document.getElementById('avatarInput').click());
+avatarDrop.addEventListener('dragover', event => {
+    event.preventDefault();
+    avatarDrop.classList.add('dragover');
+});
+avatarDrop.addEventListener('dragleave', () => avatarDrop.classList.remove('dragover'));
+avatarDrop.addEventListener('drop', event => {
+    event.preventDefault();
+    avatarDrop.classList.remove('dragover');
+    loadSelectedAvatar(event.dataTransfer.files[0]);
+});
+document.getElementById('orgInput').addEventListener('input', event => { formState.org = event.target.value; schedulePreview(); });
+document.getElementById('nameInput').addEventListener('input', event => { formState.name = event.target.value; schedulePreview(); });
+document.getElementById('genderInput').addEventListener('input', event => { formState.gender = event.target.value; schedulePreview(); });
+document.getElementById('idcardInput').addEventListener('input', event => { formState.idcard = event.target.value.trim(); schedulePreview(); });
+document.getElementById('examTimeInput').addEventListener('input', event => { formState.examTime = event.target.value; schedulePreview(); });
+
+// 证书 ID 仅保留数字，变化后刷新二维码和提交参数。
+document.getElementById('certIdInput').addEventListener('input', event => {
+    event.target.value = event.target.value.replace(/\D/g, '');
+    formState.certId = event.target.value;
+    schedulePreview();
+});
+
+document.getElementById('androidBtn').onclick = download;
+document.getElementById('iosBtn').onclick = () => {
+    if (isIOS) preview();
+    else download();
+};
+
+window.addEventListener('load', init);
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

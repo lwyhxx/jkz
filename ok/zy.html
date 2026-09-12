@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>系统-登录</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="小新卡密系统">
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 全局基础样式重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none !important;
+    }
+
+    input, textarea {
+      -webkit-user-select: auto !important;
+      user-select: auto !important;
+    }
+
+    /* 背景特效容器 - 登录前白色背景 */
+    .background-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    /* 登录后纯白简洁背景（核心修改） */
+    body.logged-in-body {
+      background: #ffffff; /* 纯白背景 */
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 20px 10px;
+    }
+
+    /* 登录后容器样式调整（适配纯白背景） */
+    body.logged-in-body .card-container {
+      background: #f8f9fa; /* 浅灰色容器背景，增加层次感 */
+      border: 1px solid #e9ecef;
+    }
+    
+    body.logged-in-body .card-header {
+      background: linear-gradient(135deg, #e8f4f8, #f0f8fb); /* 浅蓝渐变替代深色渐变 */
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    body.logged-in-body .card-header p {
+      color: #495057; /* 深色文字替代白色 */
+    }
+    
+    body.logged-in-body .alert-success {
+      background: #e8f4f8;
+      color: #2c5aa0;
+      border-color: #b9d4e9;
+    }
+    
+    body.logged-in-body .success-announcement {
+      background: #f8f9fa;
+      border-color: #dee2e6;
+    }
+    
+    body.logged-in-body .success-announcement-title {
+      color: #2c5aa0;
+    }
+    
+    body.logged-in-body .success-announcement-content {
+      color: #495057;
+    }
+    
+    body.logged-in-body .region-item {
+      background: #ffffff;
+      color: #495057;
+      border-color: #e9ecef;
+      cursor: pointer;
+    }
+    
+    body.logged-in-body .region-item:hover {
+      background: #e8f4f8;
+      border-color: #2c5aa0;
+      color: #2c5aa0;
+    }
+    
+    body.logged-in-body .region-item.region-yellow {
+      background: #fff8e1;
+      border-color: #ffe082;
+      color: #ff8f00;
+    }
+    
+    body.logged-in-body .region-item.region-yellow:hover {
+      background: #fff3cd;
+      border-color: #ffc107;
+      color: #ffffff;
+    }
+    
+    body.logged-in-body .success-section h3 {
+      color: #212529;
+    }
+    
+    body.logged-in-body .success-section p {
+      color: #495057;
+    }
+    
+    body.logged-in-body .help-link {
+      background: #ffffff;
+      color: #2c5aa0;
+      border-color: #b9d4e9;
+    }
+    
+    body.logged-in-body .help-link:hover {
+      background: #2c5aa0;
+    }
+
+    /* 通知提示样式 */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #16213e;
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      transform: translateX(150%);
+      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    /* 主容器样式 - 左右分栏 */
+    .login-container {
+      display: flex;
+      width: 100%;
+      max-width: 800px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      margin: 50px auto;
+    }
+
+    /* 左侧图片区域 */
+    .login-left {
+      flex: 1;
+      background: linear-gradient(rgba(0, 80, 160, 0.7), rgba(0, 80, 160, 0.7)), 
+                  url('https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover no-repeat;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .login-left .logo {
+      font-size: 28px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .login-left .logo span {
+      font-size: 14px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .login-left .slogan {
+      font-size: 28px;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+
+    .login-left .desc {
+      font-size: 14px;
+      opacity: 0.9;
+      line-height: 1.5;
+      max-width: 300px;
+    }
+
+    /* 右侧登录表单区域 */
+    .login-right {
+      flex: 1;
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .login-right h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #333333;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .login-right .form-label {
+      font-size: 14px;
+      color: #666666;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .login-right input[type="text"],
+    .login-right input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .login-right input[type="text"]:focus,
+    .login-right input[type="password"]:focus {
+      border-color: #2563eb;
+      outline: none;
+    }
+
+    .login-right .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-right .btn-primary:hover {
+      background-color: #1d4ed8;
+    }
+
+    .login-right .btn-secondary {
+      width: 100%;
+      padding: 10px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-right .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .error-msg {
+      color: #dc2626;
+      font-size: 14px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .success-msg {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .success-msg h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .success-msg p {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .redirecting {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .redirecting p {
+      color: #166534;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    .redirecting span {
+      cursor: pointer;
+      font-size: 16px;
+      color: #2563eb;
+      margin: 0 10px;
+      transition: color 0.3s ease;
+    }
+
+    .redirecting span:hover {
+      color: #1d4ed8;
+    }
+
+    .footer-text {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #666666;
+    }
+
+    /* 登录后页脚文字颜色调整 */
+    body.logged-in-body .footer-text {
+      color: #666666; /* 调整为深色，适配纯白背景 */
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 768px) {
+      .login-container {
+        flex-direction: column;
+        margin: 20px auto;
+      }
+      .login-left {
+        padding: 30px 20px;
+      }
+      .login-right {
+        padding: 40px 20px;
+      }
+    }
+
+    /* 原有样式保留 */
+    .card-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .card-modal.active {
+      display: flex;
+      opacity: 1;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 30 rgba(0, 0, 0, 0.3);
+      transform: scale(0.8);
+      transition: transform 0.3s ease;
+    }
+    .card-modal.active .card-content {
+      transform: scale(1);
+    }
+    .card-content h3 {
+      color: var(--success-color, #28a745);
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .card-code {
+      background: #f8f9fa;
+      border: 2px dashed var(--primary-color, #4a90e2);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--primary-color, #4a90e2);
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: var(--primary-color, #4a90e2);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 15px 0;
+      transition: all 0.3s ease;
+    }
+    .copy-btn:hover {
+      background: var(--accent-color, #2980b9);
+      transform: translateY(-2px);
+    }
+    .copy-btn.copied {
+      background: var(--success-color, #28a745);
+    }
+    .card-content p {
+      margin: 10px 0;
+      color: #666;
+    }
+    .card-content button:last-child {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .card-content button:last-child:hover {
+      background: #5a6268;
+    }
+    .copy-toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--success-color, #28a745);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1001;
+      opacity: 1;
+      transition: all 0.3s ease;
+    }
+    .announcement-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .announcement-modal.active {
+      display: flex;
+    }
+    .announcement-content {
+      background: var(--announcement-bg, #fff);
+      border: 2px solid var(--announcement-border, #007bff);
+      border-radius: 15px;
+      padding: 25px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .announcement-title {
+      color: var(--primary-color, #007bff);
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .announcement-time {
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-bottom: 15px;
+      text-align: center;
+      font-style: italic;
+    }
+    .announcement-body {
+      color: var(--text-color, #333);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      white-space: pre-wrap;
+    }
+    .announcement-footer {
+      text-align: center;
+    }
+    .announcement-footer button {
+      background: var(--primary-color, #007bff);
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+    .announcement-footer button:hover {
+      background: var(--accent-color, #0056b3);
+    }
+
+    /* 登录成功后样式 */
+    .card-container {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 800px; /* 加宽容器，适配更多地区 */
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.5s ease;
+      margin: 20px auto;
+    }
+    .card-container:hover {
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); /* 弱化阴影，适配纯白背景 */
+      transform: translateY(-5px);
+    }
+    .card-header {
+      background: linear-gradient(135deg, rgba(71, 147, 255, 0.2), rgba(120, 119, 198, 0.2));
+      padding: 15px;
+      text-align: center;
+      position: relative;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #4793ff, #7877c6, #ff6b81, #ffa502);
+    }
+    @keyframes gradientTextAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .gradient-text-main {
+      font-size: 28px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #4793ff, #ff6b81, #7877c6, #ffa502, #4793ff);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gradientTextAnimation 8s ease infinite;
+    }
+    .gradient-text-category {
+      margin-top: 25px; /* 增加分类标题间距 */
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px; /* 加大分类标题 */
+      font-weight: 600;
+      background: linear-gradient(90deg, #ff6b81, #4793ff, #ffa502, #7877c6, #ff6b81);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gradientTextAnimation 6s ease infinite;
+    }
+    .card-header p {
+      font-size: 15px;
+      opacity: 0.8;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .card-body {
+      padding: 30px; /* 优化内边距 */
+    }
+    .alert {
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .alert-error {
+      background: rgba(255, 91, 129, 0.1);
+      color: #ff6b81;
+      border-color: rgba(255, 107, 129, 0.2);
+    }
+    .alert-success {
+      background: rgba(71, 147, 255, 0.1);
+      color: #4793ff;
+      border-color: rgba(71, 147, 255, 0.2);
+    }
+    .success-section {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #4793ff, #7877c6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 25px;
+      box-shadow: 0 10px 30 rgba(71, 147, 255, 0.3);
+      position: relative;
+    }
+    .success-icon::before {
+      content: '';
+      全选复制替换
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border: 2px solid rgba(71, 147, 255, 0.3);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+    .success-icon i {
+      color: white;
+      font-size: 45px;
+    }
+    .success-section h3 {
+      font-size: 26px;
+      color: #fff;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    .success-section p {
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 25px;
+      font-size: 16px;
+    }
+    .success-announcement {
+      background: linear-gradient(135deg, rgba(255, 107, 129, 0.1), rgba(71, 147, 255, 0.1));
+      border-radius: 16px;
+      padding: 12px 18px;
+      margin: 0 auto 25px; /* 增加公告栏底部间距 */
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      max-width: 100%;
+    }
+    .success-announcement-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .success-announcement-icon {
+      color: #ff6b81;
+      font-size: 16px;
+    }
+    .success-announcement-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4793ff;
+    }
+    .success-announcement-time {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-left: auto;
+    }
+    .success-announcement-content {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    
+    /* 修复地区网格样式 - 核心修改 */
+    .region-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* 加宽每个项 */
+      gap: 12px; /* 优化间距 */
+      margin-top: 15px;
+      margin-bottom: 25px; /* 增加底部间距 */
+    }
+    .region-item {
+      padding: 15px 10px; /* 增加内边距 */
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      color: rgba(255, 255, 255, 0.9);
+      min-height: 60px; /* 统一高度 */
+    }
+    .region-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(71, 147, 255, 0.1), rgba(120, 119, 198, 0.1));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .region-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-3px);
+      border-color: #4793ff;
+      color: #4793ff;
+      box-shadow: 0 8px 15px rgba(71, 147, 255, 0.15);
+    }
+    .region-item:hover::before {
+      opacity: 1;
+    }
+    .region-item.region-yellow {
+      background: rgba(255, 215, 0, 0.15);
+      border-color: rgba(255, 215, 0, 0.3);
+      color: #ffd700;
+    }
+    .region-item.region-yellow:hover {
+      background: rgba(255, 215, 0, 0.25);
+      border-color: #ffd700;
+      color: #fff;
+      box-shadow: 0 8px 15px rgba(255, 215, 0, 0.2);
+    }
+    
+    /* 为不同类型添加区分色 */
+    .region-item.type1 {
+      border-left: 3px solid #4793ff;
+    }
+    .region-item.type2 {
+      border-left: 3px solid #ff6b81;
+    }
+    .region-item.type3 {
+      border-left: 3px solid #ffa502;
+    }
+    
+    .help-section {
+      margin-top: 40px;
+      text-align: center;
+    }
+    .help-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .help-link {
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 30px;
+      color: #4793ff;
+      text-decoration: none;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(71, 147, 255, 0.2);
+    }
+    .help-link:hover {
+      background: #4793ff;
+      color: white;
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(71, 147, 255, 0.2);
+    }
+    .logout-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff6b81, #ff4757);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 25px; /* 增加底部间距 */
+    }
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.6s;
+    }
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+    .logout-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(255, 107, 129, 0.3);
+    }
+    @media (max-width: 768px) {
+      .card-body {
+        padding: 20px;
+      }
+      .region-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+      }
+      .gradient-text-main {
+        font-size: 24px;
+      }
+      .gradient-text-category {
+        font-size: 16px;
+      }
+      .success-icon {
+        width: 80px;
+        height: 80px;
+      }
+      .success-icon i {
+        font-size: 35px;
+      }
+      .logout-btn {
+        padding: 10px;
+        font-size: 15px;
+      }
+    }
+    @media (max-width: 480px) {
+      .region-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      }
+      .region-item {
+        font-size: 12px;
+        padding: 10px 5px;
+        min-height: 50px;
+      }
+    }
+  </style>
+  
+  
+  
+  </head>
+
+<body class="logged-in-body">
+  <!-- 背景特效容器 - 登录前显示 -->
+  
+  <!-- 通知提示 -->
+  <div id="notification" class="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText">操作成功！</span>
+  </div>
+
+  <!-- 公告弹窗 -->
+  
+  <!-- 登录界面 -->
+    <!-- 登录后界面 -->
+  <div class="card-container logged-in">
+    <!-- 头部 -->
+    <div class="card-header">
+      <h1 class="gradient-text-main">小新卡密系统</h1></h1>
+      <p>成功登录，已绑定设备。</p>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="card-body">
+      <div class="success-section" style="padding-top: 0; margin-top: 0;">
+        <!-- 退出卡密按钮 -->
+        <button class="logout-btn" onclick="clear_km()">
+          <i class="fas fa-sign-out-alt"></i> 退出当前卡密
+        </button>
+        
+        <!-- 登录成功公告栏 -->
+        <div class="success-announcement">
+          <div class="success-announcement-header">
+            <i class="fas fa-bullhorn success-announcement-icon"></i>
+            <div class="success-announcement-title">系统公告</div>
+            <div class="success-announcement-time">2024-01-01</div>
+          </div>
+          <div class="success-announcement-content">
+            暂无公告内容          </div>
+        </div>
+        
+        <!-- 地区跳转链接配置：只需修改主域名 -->
+        <script>
+          // const MAIN_DOMAIN = 'https://aiyu.lat/1';
+          const MAIN_DOMAIN = 'https://uuo.lat';
+
+          function getJumpUrl(type) {
+            const domain = MAIN_DOMAIN.replace(/\/$/, '');
+            return type > 1
+              ? `${domain}/index.php?z=${encodeURIComponent(type)}`
+              : `${domain}/index.php`;
+          }
+
+          document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.region-item[onclick]').forEach((item) => {
+              const match = item.getAttribute('onclick').match(/jumpIndex\((\d+)\)/);
+              if (!match) return;
+
+              const link = document.createElement('a');
+              link.className = item.className;
+              link.href = getJumpUrl(Number(match[1]));
+              link.innerHTML = item.innerHTML;
+              item.replaceWith(link);
+            });
+          });
+        </script>
+
+        <!-- 修复后的地区分类 - 核心修改 -->
+        <div class="gradient-text-category">三通专属：</div>
+        <div class="region-grid">
+            <div class="region-item type3" onclick="jumpIndex(57)">新广东DIY -推</div>
+            <div class="region-item type1" onclick="jumpIndex(75)">电子版DIY -推</div>
+            <div class="region-item type1" onclick="jumpIndex(44)">东莞DIY1 -推</div>
+            <div class="region-item type1" onclick="jumpIndex(181)">东莞DIY2 -推</div>
+            <div class="region-item type3" onclick="jumpIndex(35)">新塘 -推</div>
+          <div class="region-item type3" onclick="jumpIndex(93)">咸宁 -推</div>
+
+          <div class="region-item type3" onclick="jumpIndex(85)">天津 -推</div>
+          <div class="region-item type2" onclick="jumpIndex(131)">DIY实卡1-推</div>
+          <div class="region-item type3" onclick="jumpIndex(132)">DIY实卡2-推</div>
+          <div class="region-item type3" onclick="jumpIndex(133)">DIY实卡3-推</div>
+          <div class="region-item type3" onclick="jumpIndex(139)">广东实卡4-推</div>
+          <div class="region-item type3" onclick="jumpIndex(140)">实卡5-推</div>
+          <div class="region-item type3" onclick="jumpIndex(141)">四川实卡6-推</div>
+          <div class="region-item type3" onclick="jumpIndex(142)">DIY实卡7-推</div>
+          <div class="region-item type2" onclick="jumpIndex(143)">新疆实卡8-推</div>
+          <div class="region-item type1" onclick="jumpIndex(144)">实卡9-推</div>
+          <div class="region-item type2" onclick="jumpIndex(145)">DIY实卡10-推</div>
+          <div class="region-item type1" onclick="jumpIndex(90)">普城 </div>
+          <div class="region-item type1" onclick="jumpIndex(115)">呼和浩特 推</div>
+          <div class="region-item type2" onclick="jumpIndex(21)">山东日照 -推</div>
+          <div class="region-item type2" onclick="jumpIndex(26)">新疆</div>
+          <div class="region-item type3" onclick="jumpIndex(83)">电子DIY显号</div>
+        </div>
+        
+        <div class="gradient-text-category">淘宝京东专属</：</div>
+        <div class="region-grid">
+          <div class="region-item type2" onclick="jumpIndex(39)">柳州DIY -推</div>
+          <div class="region-item type2" onclick="jumpIndex(49)">佛山DIY -推</div>
+            <div class="region-item type2" onclick="jumpIndex(116)">深圳DIY -推</div>
+          <div class="region-item type2" onclick="jumpIndex(2)">广州花纹 -推</div>
+          <div class="region-item type2" onclick="jumpIndex(17)">深圳 -推</div>
+          <div class="region-item type1" onclick="jumpIndex(73)">廊坊-</div>
+          <div class="region-item type1" onclick="jumpIndex(69)">阿克苏-</div>
+          <div class="region-item type2" onclick="jumpIndex(107)">江苏DIY -</div>
+          <div class="region-item type1" onclick="jumpIndex(114)">青岛 -</div>
+          <div class="region-item type2" onclick="jumpIndex(88)">兰州 -</div>
+          <div class="region-item type2" onclick="jumpIndex(77)">自定义1 -</div>
+          <div class="region-item type2" onclick="jumpIndex(58)">凉山 -</div>
+          <div class="region-item type1" onclick="jumpIndex(55)">自定义 -</div>
+          <div class="region-item type1" onclick="jumpIndex(5)">新重庆 -</div>
+          <div class="region-item type1" onclick="jumpIndex(52)">武汉 -</div>
+          <div class="region-item type2" onclick="jumpIndex(76)">安顺 -</div>
+          <div class="region-item type1" onclick="jumpIndex(1)">郑州 -</div>
+          <div class="region-item type1" onclick="jumpIndex(53)">黔西 -</div>
+          <div class="region-item type1" onclick="jumpIndex(8)">毕节 -</div>
+          <div class="region-item type1" onclick="jumpIndex(54)">运城 -</div>
+          <div class="region-item type1" onclick="jumpIndex(70)">洛阳-</div>
+           <div class="region-item type2" onclick="jumpIndex(78)">新拉萨</div>
+          <div class="region-item type1" onclick="jumpIndex(86)">太原</div>
+          <div class="region-item type1" onclick="jumpIndex(149)">河南DIY</div>
+          <div class="region-item type2" onclick="jumpIndex(150)">DIY4</div>
+          <div class="region-item type2" onclick="jumpIndex(18)">杭州</div>
+          <div class="region-item type2" onclick="jumpIndex(7)">安庆</div>
+          <div class="region-item type2" onclick="jumpIndex(15)">福州</div>
+          <div class="region-item type2" onclick="jumpIndex(10)">西安</div>
+          <div class="region-item type2" onclick="jumpIndex(13)">北屯</div>
+          <div class="region-item type2" onclick="jumpIndex(30)">达州</div>
+          <div class="region-item type2" onclick="jumpIndex(6)">新乡</div>
+          <div class="region-item type2" onclick="jumpIndex(12)">宁波</div>
+          <div class="region-item type2" onclick="jumpIndex(41)">重庆</div>
+          <div class="region-item type2" onclick="jumpIndex(32)">四川</div>
+          <div class="region-item type2" onclick="jumpIndex(111)">河北保定</div>
+          <div class="region-item type2" onclick="jumpIndex(25)">成都</div>
+          <div class="region-item type2" onclick="jumpIndex(40)">拉萨</div>
+          <div class="region-item type2" onclick="jumpIndex(4)">赤峰</div>
+          <div class="region-item type2" onclick="jumpIndex(33)">苏州</div>
+          <div class="region-item type2" onclick="jumpIndex(34)">辽阳</div>
+          <div class="region-item type2" onclick="jumpIndex(80)">济南</div>
+          <div class="region-item type2" onclick="jumpIndex(101)">重庆渝中区</div>
+          <div class="region-item type2" onclick="jumpIndex(9)">广东自定义</div>
+          <div class="region-item type2" onclick="jumpIndex(46)">自定义2</div>
+          <div class="region-item type2" onclick="jumpIndex(89)">自定义3</div>
+          <div class="region-item type2" onclick="jumpIndex(72)">浙江自定义</div>
+          <div class="region-item type2" onclick="jumpIndex(178)">河北自定义</div>
+          <div class="region-item type2" onclick="jumpIndex(59)">湖南自定义</div>
+          <div class="region-item type2" onclick="jumpIndex(94)">江苏无锡</div>
+          <div class="region-item type2" onclick="jumpIndex(112)">兰州2</div>
+        </div>
+        
+        <div class="gradient-text-category">美团专属：</div>
+        <div class="region-grid">
+          <div class="region-item type3" onclick="jumpIndex(118)">花纹实卡-推</div>
+          <div class="region-item type3" onclick="jumpIndex(205)">乐昌-推</div>
+          <div class="region-item type1" onclick="jumpIndex(207)">广东-推 </div>
+          <div class="region-item type3" onclick="jumpIndex(37)">西宁 -推</div>
+          <div class="region-item type3" onclick="jumpIndex(22)">东莞 -推</div>
+            <div class="region-item type1" onclick="jumpIndex(28)">都均 -推</div>
+            <div class="region-item type1" onclick="jumpIndex(179)">都均DIY -推</div>
+          <div class="region-item type1" onclick="jumpIndex(117)">中山-推</div>
+          <div class="region-item type1" onclick="jumpIndex(97)">江苏1 推</div>
+          <div class="region-item type1" onclick="jumpIndex(109)">金华 </div>
+          <div class="region-item type3" onclick="jumpIndex(206)">淄博</div>
+          <div class="region-item type3" onclick="jumpIndex(146)">湛江</div>
+          <div class="region-item type3" onclick="jumpIndex(147)">阜阳-</div>
+          <div class="region-item type2" onclick="jumpIndex(136)">福建-</div>
+          <div class="region-item type3" onclick="jumpIndex(148)">大同</div>
+          <div class="region-item type2" onclick="jumpIndex(51)">佛山自定义 -</div>
+          <div class="region-item type2" onclick="jumpIndex(38)">柳州自定义 -</div>
+          <div class="region-item type3" onclick="jumpIndex(19)">广州 -</div>
+          <div class="region-item type3" onclick="jumpIndex(50)">衡阳 -</div>
+          <div class="region-item type3" onclick="jumpIndex(81)">原阳县 -</div>
+          <div class="region-item type2" onclick="jumpIndex(82)"> 东阿县-</div>
+          <div class="region-item type3" onclick="jumpIndex(95)"> 防城港-</div>
+          <div class="region-item type3" onclick="jumpIndex(68)">廊坊 -</div>
+          <div class="region-item type3" onclick="jumpIndex(96)">临沂 -</div>
+          <div class="region-item type3" onclick="jumpIndex(106)">自定义 -</div>
+          <div class="region-item type3" onclick="jumpIndex(137)">自定义2 -</div>
+          <div class="region-item type3" onclick="jumpIndex(110)">郑州 -</div>
+          <div class="region-item type3" onclick="jumpIndex(122)">莆田-</div>
+          <div class="region-item type3" onclick="jumpIndex(124)">重庆</div>
+          <div class="region-item type3" onclick="jumpIndex(24)">成都</div>
+          <div class="region-item type3" onclick="jumpIndex(31)">自定义1</div>
+          <div class="region-item type3" onclick="jumpIndex(16)">太原</div>
+           <div class="region-item type3" onclick="jumpIndex(11)">保定</div>
+          <div class="region-item type3" onclick="jumpIndex(60)">乐山</div>
+          <div class="region-item type1" onclick="jumpIndex(103)">拉萨</div>
+          <div class="region-item type1" onclick="jumpIndex(71)">武汉 -</div>
+          <div class="region-item type1" onclick="jumpIndex(29)">江苏2</div>
+          <div class="region-item type1" onclick="jumpIndex(91)">湖南自定义</div>
+        </div>
+        
+        <div class="gradient-text-category"> 高级自定义模板：</div>
+        <div class="region-grid">
+          <div class="region-item type1" onclick="jumpIndex(48)">重庆自定义</div>
+          <div class="region-item type3" onclick="jumpIndex(20)">郑州自定义</div>
+          <div class="region-item type3" onclick="jumpIndex(3)">自定义1</div>
+          <div class="region-item type3" onclick="jumpIndex(36)">自定义2</div>
+          <div class="region-item type3" onclick="jumpIndex(47)">自定义3</div>
+          <div class="region-item type1" onclick="jumpIndex(92)">新郑州 -</div>
+          <div class="region-item type1" onclick="jumpIndex(45)">上海</div>
+          <div class="region-item type1" onclick="jumpIndex(23)">北京</div>
+          <div class="region-item type1" onclick="jumpIndex(14)">广东程序版</div>
+           <div class="region-item type1" onclick="jumpIndex(113)">广东365</div>
+            <div class="region-item type1" onclick="jumpIndex(61)">深圳带发票 -</div>
+          <div class="region-item type1" onclick="jumpIndex(56)">广东餐饮 -</div>
+          <div class="region-item type1" onclick="jumpIndex(62)">病例单 -</div>
+          <div class="region-item type1" onclick="jumpIndex(63)">诊断证明 -</div>
+          <div class="region-item type1" onclick="jumpIndex(102)">休假单 -</div>
+          <div class="region-item type1" onclick="jumpIndex(64)">体检报告 -</div>
+            <div class="region-item type1" onclick="jumpIndex(65)">微信账单 -</div>
+             <div class="region-item type1" onclick="jumpIndex(66)">全国自定义发票 -</div>
+             <div class="region-item type1" onclick="jumpIndex(104)">吉林</div>
+            <div class="region-item type3" onclick="jumpIndex(98)">自定义4</div>
+            <div class="region-item type3" onclick="jumpIndex(99)">银川市 -</div>
+            <div class="region-item type3" onclick="jumpIndex(100)">渠县</div>
+            <div class="region-item type3" onclick="jumpIndex(74)">福建自定义</div>
+            <div class="region-item type3" onclick="jumpIndex(105)">二维码-</div>
+            <div class="region-item type3" onclick="jumpIndex(182)"> 东莞</div>
+            <div class="region-item type3" onclick="jumpIndex(183)"> 测试</div>
+            <div class="region-item type3" onclick="jumpIndex(184)"> 广西</div>
+            <div class="region-item type3" onclick="jumpIndex(185)"> 南昌</div>
+            <div class="region-item type3" onclick="jumpIndex(186)"> 南昌青云区</div>
+            <div class="region-item type3" onclick="jumpIndex(190)"> 南昌高新区</div>
+            <div class="region-item type3" onclick="jumpIndex(187)"> 济南历城</div>
+            <div class="region-item type3" onclick="jumpIndex(188)"> 烟台</div>
+            <div class="region-item type3" onclick="jumpIndex(189)"> 桂林</div>
+            <div class="region-item type3" onclick="jumpIndex(191)"> 海南</div>
+            <div class="region-item type3" onclick="jumpIndex(192)"> 无锡</div>
+            <div class="region-item type3" onclick="jumpIndex(193)"> 东莞原版</div>
+            <div class="region-item type3" onclick="jumpIndex(194)"> 泉州DIY</div>
+            <div class="region-item type3" onclick="jumpIndex(195)"> 云南</div>
+            <div class="region-item type3" onclick="jumpIndex(196)"> 安徽安庆</div>
+            <div class="region-item type3" onclick="jumpIndex(197)"> 烟台</div>
+            <div class="region-item type3" onclick="jumpIndex(198)"> 三亚</div>
+            <div class="region-item type3" onclick="jumpIndex(199)"> 宿迁市</div>
+            <div class="region-item type3" onclick="jumpIndex(200)"> 南京</div>
+            <div class="region-item type3" onclick="jumpIndex(201)"> 新疆喀什</div>
+            <div class="region-item type3" onclick="jumpIndex(202)"> 河北唐山</div>
+            <div class="region-item type3" onclick="jumpIndex(203)"> 合肥</div>
+            <div class="region-item type3" onclick="jumpIndex(204)"> 江苏DIY</div>
+            <div class="region-item type3" onclick="jumpIndex(208)"> 玉环</div>
+        </div>
+        
+        <div class="gradient-text-category">实卡模板：</div>
+        <div class="region-grid">
+            <div class="region-item type3" onclick="jumpIndex(118)">花纹实卡-推</div>
+            <div class="region-item type3" onclick="jumpIndex(119)">柳州实卡-推</div>
+            <div class="region-item type3" onclick="jumpIndex(120)">深圳实卡-</div>
+            <div class="region-item type3" onclick="jumpIndex(121)">广州实卡-</div>
+            <div class="region-item type3" onclick="jumpIndex(128)">天津实卡-</div>
+            <div class="region-item type3" onclick="jumpIndex(130)">佛山实卡-</div>
+            <div class="region-item type3" onclick="jumpIndex(126)">防城港实卡-</div>
+            <div class="region-item type3" onclick="jumpIndex(125)">苏州实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(127)">湖南实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(129)">乐山实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(79)">大连实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(108)">大连卡带码</div>
+            <div class="region-item type3" onclick="jumpIndex(134)">温州实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(135)">漯河实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(27)">重庆实卡</div>
+            <div class="region-item type3" onclick="jumpIndex(42)">实卡1</div>
+            <div class="region-item type3" onclick="jumpIndex(43)">实卡2</div>
+            <div class="region-item type3" onclick="jumpIndex(67)">广东实卡带码 -</div>
+            <div class="region-item type3" onclick="jumpIndex(84)">广东实卡无码</div>
+            <div class="region-item type3" onclick="jumpIndex(212)">体检表</div>
+            <div class="region-item type3" onclick="jumpIndex(213)">体检表1</div>
+            <div class="region-item type3" onclick="jumpIndex(214)">驾驶1</div>
+            <div class="region-item type3" onclick="jumpIndex(215)">驾驶2</div>
+            <div class="region-item type3" onclick="jumpIndex(300)">体检表1</div>
+            <div class="region-item type3" onclick="jumpIndex(301)">驾驶1</div>
+            <div class="region-item type3" onclick="jumpIndex(306)">驾驶2</div>
+            
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer-text"></div>
+
+  <!-- 核心功能JS - 背景特效/粘贴/退出/指纹 -->
+  <script>
+    // 禁止F12 + 禁止调试
+ // ==============================================
+// 终极禁止开发者工具 / 禁止F12 / 禁止调试 / 防绕过
+// ==============================================
+// (function() {
+//     // 1. 禁用所有调试入口快捷键
+//     document.onkeydown = function(e) {
+//         const key = e.key;
+//         // 禁止 F12 / Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+U / Ctrl+Shift+C
+//         if (
+//             key === 'F12' ||
+//             (e.ctrlKey && e.shiftKey && (key === 'I' || key === 'J' || key === 'C')) ||
+//             (e.ctrlKey && key === 'U')
+//         ) {
+//             e.preventDefault();
+//             e.stopPropagation();
+//             return false;
+//         }
+//     };
+
+    // 2. 永久禁止右键菜单
+    // document.oncontextmenu = function(e) {
+    //     e.preventDefault();
+    //     return false;
+    // };
+
+    // 3. 禁止复制 / 剪切 / 粘贴 / 选中
+    // document.oncopy = () => false;
+    // document.oncut = () => false;
+    // document.onpaste = () => false;
+    // document.onselectstart = () => false;
+
+    // 4. 防控制台打开（最强，打开就卡死/跳走/清空）
+    // let devtools = { open: false };
+    // const checkDevTools = () => {
+    //     const start = performance.now();
+    //     debugger; // 核心拦截：控制台打开必触发
+    //     if (performance.now() - start > 100) {
+    //         devtools.open = true;
+    //         // 触发惩罚机制
+    //         window.location.href = 'about:blank'; // 直接跳空白页（最狠）
+    //         // 或者 window.stop(); 停止加载
+    //     }
+    // };
+
+    // 5. 多维度循环检测，无法关闭
+    // setInterval(checkDevTools, 100);
+    // setInterval(checkDevTools, 50);
+    // window.addEventListener('devtoolschange', () => {});
+
+    // 6. 防控制台清屏、防关闭检测
+    // const originalClear = console.clear;
+    // console.clear = function() {
+    //     window.location.href = 'about:blank';
+    //     return originalClear.apply(this, arguments);
+    // };
+
+    // 7. 禁用 console 关键方法
+//     Object.keys(window.console).forEach(key => {
+//         if (typeof window.console[key] === 'function') {
+//             window.console[key] = () => {};
+//         }
+//     });
+// })();
+
+    // 通知提示功能
+    function showNotification(message) {
+      const notification = document.getElementById('notification');
+      const notificationText = document.getElementById('notificationText');
+      notificationText.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // 退出登录功能
+    function clear_km() {
+      // 删除所有cookie
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      showNotification('已退出当前卡密！');
+      window.location.href = window.location.pathname;
+    }
+
+    // 倒计时功能（保留原逻辑）
+    if (document.getElementById('countdown')) {
+      function updateCountdown() {
+        const countdownEl = document.getElementById('countdown');
+        let remaining = parseInt(countdownEl.textContent);
+        if (remaining > 0) {
+          remaining--;
+          countdownEl.textContent = remaining;
+        } else {
+          clearInterval(timer);
+          window.location.reload();
+        }
+      }
+      const timer = setInterval(updateCountdown, 86400000);
+    }
+
+    // 同步模板设置到cookie
+    const template = 'neomorphism';
+    document.cookie = `template=${template}; expires=${new Date(Date.now() + 31536000000).toUTCString()}; path=/`;
+
+    // 移除登录后的星空流星背景特效（核心修改）
+        // 仅保留自动退出逻辑，移除星空和流星生成代码
+    (function() {
+      // 30分钟后自动退出
+      setTimeout(() => {
+        showNotification('登录超时，已自动退出！');
+        // 延迟1秒退出，让用户看到提示
+        setTimeout(() => {
+          clear_km();
+        }, 1000);
+      }, 1800000);
+    })();
+      </script>
+
+  <!-- 设备指纹JS - 保留原设备锁定核心逻辑 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/fingerprintjs/3.3.4/fingerprintjs.min.js"></script>
+  <script>
+      </script>
+
+  <!-- 屏幕分辨率收集 - 保留原兜底逻辑 -->
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
