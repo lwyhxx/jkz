@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健康证模板</title>
+<style>
+		:root {
+			--page-bg: #f3f7ff;
+			--panel-bg: rgba(255, 255, 255, .9);
+			--text: #172033;
+			--muted: #6b7280;
+			--primary: #2563eb;
+			--border: #dbe3f0;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			color: var(--text);
+			font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+			background: radial-gradient(circle at top left, #e4efff 0, transparent 34%), var(--page-bg);
+		}
+
+		.page {
+			width: min(100% - 32px, 1080px);
+			margin: 0 auto;
+			padding: 36px 0 48px;
+		}
+
+		.hero {
+			padding: 28px 30px;
+			margin-bottom: 20px;
+			border: 1px solid rgba(255, 255, 255, .9);
+			border-radius: 24px;
+			background: var(--panel-bg);
+			box-shadow: 0 12px 34px rgba(53, 82, 130, .08);
+		}
+
+		.hero h1 { margin: 0; font-size: 27px; letter-spacing: .02em; }
+		.hero p { margin: 9px 0 0; color: var(--muted); font-size: 14px; }
+
+		.template-section {
+			padding: 24px;
+			border-radius: 24px;
+			background: var(--panel-bg);
+			box-shadow: 0 12px 34px rgba(53, 82, 130, .08);
+		}
+
+		.section-title {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 18px;
+		}
+
+		.section-title h2 { margin: 0; font-size: 17px; }
+		.section-title span { color: var(--muted); font-size: 13px; }
+
+		.template-grid {
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 14px;
+		}
+
+		.template-card {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			overflow: hidden;
+			border: 1px solid var(--border);
+			border-radius: 11px;
+			background: #fff;
+			cursor: pointer;
+			transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+		}
+
+		.template-card:hover,
+		.template-card:focus-visible {
+			outline: none;
+			transform: translateY(-3px);
+			border-color: #8fb4f7;
+			box-shadow: 0 9px 20px rgba(37, 99, 235, .14);
+		}
+
+		.template-card img {
+			display: block;
+			width: 100%;
+			aspect-ratio: 1.48 / 1;
+			object-fit: contain;
+			padding: 9px;
+			background: #f8fafc;
+		}
+
+		.template-info {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			padding: 10px 11px 11px;
+		}
+
+		.template-name { font-size: 14px; font-weight: 600; }
+		.template-open { color: var(--primary); font-size: 12px; white-space: nowrap; }
+
+		@media (max-width: 760px) {
+			.page { width: min(100% - 20px, 560px); padding-top: 18px; }
+			.hero { padding: 22px 20px; }
+			.template-section { padding: 16px; }
+			.template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+		}
+	</style>
+</head>
+<body>
+<main class="page">
+<header class="hero">
+<h1>健康证模板</h1>
+<p>选择一个 DIY 健康证模板，进入信息填写和生成页面。</p>
+</header>
+<section class="template-section" aria-labelledby="templateTitle">
+<div class="section-title"><h2 id="templateTitle">DIY 城市过鸟</h2><span>18 个模板</span></div>
+<div class="template-grid"><article class="template-card" tabindex="0" role="link" onclick="location.href='DIY6.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY6.jpg" alt="DIY6 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY6</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY24.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY24.jpg" alt="DIY24 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY24</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY23.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY23.jpg" alt="DIY23 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY23</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY22.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY22.jpg" alt="DIY22 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY22</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY21.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY21.jpg" alt="DIY21 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY21</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY25.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY25.jpg" alt="DIY25 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY25</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY20.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY20.jpg" alt="DIY20 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY20</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY19.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY19.jpg" alt="DIY19 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY19</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY18.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY18.jpg" alt="DIY18 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY18</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY17.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY17.jpg" alt="DIY17 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY17</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY15.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY15.jpg" alt="DIY15 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY15</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY16.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY16.jpg" alt="DIY16 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY16</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY26.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY26.jpg" alt="DIY26 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY26</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY27.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY27.jpg" alt="DIY27 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY27</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY28.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY28.jpg" alt="DIY28 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY28</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY29.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY29.jpg" alt="DIY29 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY29</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY30.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY30.jpg" alt="DIY30 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY30</span><span class="template-open">选择模板</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='DIY31.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="ult/DIY31.jpg" alt="DIY31 模板" loading="lazy">
+<div class="template-info"><span class="template-name">DIY31</span><span class="template-open">选择模板</span></div></article></div>
+</section>
+<p></p>
+<section class="template-section" aria-labelledby="regionTitle">
+<div class="section-title"><h2 id="regionTitle">地区</h2><span>7 个地区</span></div>
+<div class="template-grid"><article class="template-card" tabindex="0" role="link" onclick="location.href='xianning.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/咸宁.jpg" alt="咸宁" loading="lazy">
+<div class="template-info"><span class="template-name">咸宁</span><span class="template-open">进入页面</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='fs.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/佛山.jpg" alt="佛山" loading="lazy">
+<div class="template-info"><span class="template-name">佛山</span><span class="template-open">进入页面</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='guilin.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/桂林.jpg" alt="桂林" loading="lazy">
+<div class="template-info"><span class="template-name">桂林</span><span class="template-open">进入页面</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='lz.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/兰州.jpg" alt="兰州" loading="lazy">
+<div class="template-info"><span class="template-name">兰州</span><span class="template-open">进入页面</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='wuhan.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/武汉.jpg" alt="武汉" loading="lazy">
+<div class="template-info"><span class="template-name">武汉</span><span class="template-open">进入页面</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='dg3.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/东莞3.jpg" alt="东莞3" loading="lazy">
+<div class="template-info"><span class="template-name">东莞3</span><span class="template-open">进入页面</span></div></article>
+<article class="template-card" tabindex="0" role="link" onclick="location.href='xt.html'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+<img src="region/新塘.jpg" alt="新塘" loading="lazy">
+<div class="template-info"><span class="template-name">新塘</span><span class="template-open">进入页面</span></div></article></div>
+</section>
+</main>
+</body>
+</html>
