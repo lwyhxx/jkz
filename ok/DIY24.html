@@ -498,9 +498,9 @@ async function init() {
     try {
         setStatus('正在加载底图...');
         [bgImg, sealImg,logoImg] = await Promise.all([
-            loadImage('images/DIY24.png'),   // 底图路径
-            loadImage('images/DIY8.png'),    // 印章路径
-            loadImage('images/logo2.png')
+            loadImage('./images/DIY24.png'),   // 底图路径
+            loadImage('./images/DIY8.png'),    // 印章路径
+            loadImage('./images/logo2.png')
         ]);
         if (!bgImg) throw new Error('底图加载失败');
         if (defaultAvatarFile) avatarImg = await loadImage(defaultAvatarFile);
