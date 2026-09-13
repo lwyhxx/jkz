@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<script>window.QR_DOMAINS=["t7oazy.lat"];</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临沂市模板健康证</title>
+    <script src="../js/qrcode.min.js"></script>
+    <script src="../js/html2canvas.min.js"></script>
+    <script src="/1/js/rj.js"></script>
+    <link rel="stylesheet" href="../css/loading.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .form-container, .preview-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: #0052cc;
+            margin: 20px 0;
+            font-size: 2.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0052cc;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0052cc;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #0052cc;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0052cc;
+            box-shadow: 0 0 5px rgba(0, 82, 204, 0.5);
+        }
+        /* 新增：姓名+性别同行布局 */
+        .name-gender-group {
+            display: flex;
+            gap: 15px;
+        }
+        .name-gender-group > div {
+            flex: 1;
+        }
+        .upload-area {
+            border: 2px dashed #0052cc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px 0;
+            background: rgba(0, 82, 204, 0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-area:hover {
+            background: rgba(0, 82, 204, 0.1);
+        }
+        .upload-area i {
+            font-size: 48px;
+            color: #0052cc;
+            margin-bottom: 10px;
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            background: #0052cc;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #0040a0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-download {
+            background: #219653;
+        }
+        .btn-download:hover {
+            background: #197d43;
+        }
+        .btn-save-image {
+            background: #e67e22;
+        }
+        .btn-save-image:hover {
+            background: #d35400;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .actions button {
+            flex: 1;
+            min-width: 120px;
+        }
+        footer {
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            max-width: 900px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .form-container, .preview-container {
+                max-width: 100%;
+            }
+            .upload-container {
+                flex-direction: column;
+            }
+            .id-input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            /* 移动端姓名性别恢复垂直布局 */
+            .name-gender-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        .notification {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .notification.error {
+            background: #e74c3c;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .qr-status {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 5px;
+            text-align: center;
+        }
+        .qr-status.success {
+            color: #27ae60;
+        }
+
+        /* 编号输入组样式 */
+        .id-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .id-input-group input {
+            flex: 1;
+        }
+        .btn-generate-id {
+            background-color: #f39c12;
+            padding: 8px 15px;
+            font-size: 14px;
+            width: auto;
+            margin-top: 0;
+        }
+        .btn-generate-id:hover {
+            background-color: #e67e22;
+        }
+        .id-tip {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* 123.html完整模板样式 */
+        body,html{
+            overflow-x:hidden;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            padding-bottom:40px;
+        }
+
+        .hosp-intro, .other-intro {
+            padding: 10px;
+        }
+
+        .hosp-intro img, .other-intro img {
+            width: 100%;
+        }
+
+        .cardinfo {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 20px 0;
+            font-size: 14px;
+        }
+
+        .cardinfo .card {
+            width: 350px;
+            height: 220px;
+            position: relative;
+        }
+
+        .card .info {
+            width: 200px;
+            padding: 0 10px;
+            position:absolute;
+            z-index:999;
+        }
+        .card .card-bg{
+            position:absolute;width:350px;height:220px;z-index:1;left:0;top:0;
+            border-radius: 10px;
+        }
+        a {
+            text-decoration: none
+        } 
+        .card .bh {
+            white-space: nowrap;
+            /* 新增：姓名性别行flex布局，紧凑并排 */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 核心修改：证件字体改为思源黑体，颜色黑色 */
+        .card .info * {
+            font-weight: bold ;
+            font-size: 14.5px;
+            font-family: "思源黑体", "Source Han Sans", "Noto Sans SC", sans-serif !important;
+            color: #000 !important; /* 改为黑色 */
+        }
+        
+        /* 姓名性别项单独排版优化 */
+        .card .bh .name-item,
+        .card .bh .gender-item {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .card .xm span {
+            display: inline-block;
+            width: calc(50%);
+        }
+
+        .card .info div {
+            margin-bottom: 11px;
+        }
+
+        .card .headimg {
+            position: absolute;
+            right: 12px;
+            top: 70px;
+            width: 100px;
+            height: 120px;
+            z-index:999;
+            border-radius: 5px;
+        }
+
+        .cardinfo .hosp {
+            position: absolute;
+            bottom: 7px;
+            margin-left: 10px;
+            color: #fff;
+            z-index:999;
+        }
+        .page-foot {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            height: 50px;
+            line-height: 50px;
+            border-top: 1px solid #f2f2f2;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .page-foot div {
+            width: 50%;
+            border-right: 1px solid #f2f2f2;
+        }
+
+        .page-foot div:last-child {
+            border-right: 0px;
+        }
+
+        .cardinfo .ygqimg {
+            width: 130px;
+            position: absolute;
+            right: 100px;
+            top: calc(50% - 20px);
+            z-index:1000;
+        }
+
+        .gz {
+            background-color: #5bc0de;
+            text-align: center;
+            padding: 10px 0;
+            line-height: 25px;
+        }
+
+        .gz a {
+            background-color: #fff;
+            display: inline-block;
+            padding: 0 15px;
+            border-radius: 15px;
+            cursor:pointer;
+            position:absolute;
+            right:10px;
+        }
+
+        .gz a:link {
+            color: #000;
+            text-decoration: none;
+        }
+        .gz a:visited {
+            color: #000;
+            text-decoration: none;
+        }
+        .gz a:hover {
+            color: #000;
+            text-decoration: none;
+        }
+        .gz a:active {
+            color: #000;
+            text-decoration: none;
+        }
+        .cardpic{
+            min-width:350px;
+        }
+        #saveToImg{
+            color: red;
+            margin-left: 20px;
+            padding: 10px 0;
+        }
+        .applyyj{
+            text-align: center;background-color: #eba753;color: #ffffff;height: 40px;line-height: 40px;border-radius: 10px;width: calc(100% - 80px);margin-left: 40px;margin-top: 20px;
+        }
+        .showCardImg{
+            z-index: 9999999;
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            left: 0;
+            top: 0;
+            display: none;
+        }
+        .showCardImgMask{
+            position: fixed;
+            z-index: 9998;
+            width: 100%;
+            height: 100%;
+            top:0;
+            left: 0;
+            background-color: #515151;
+            opacity: 0.4;
+            overflow: none;
+            display: none;
+        }
+        .showCardImgimg{
+            width: 80%;
+            margin-left: 10%;
+            margin-top: 20%;
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            padding-bottom: 20px;
+        }
+        .showCardImgimg img{
+            width: 100%;
+        }
+        .closeModel{
+            float: right;
+            color: #007AFF;
+            padding: 0 20px;
+        }
+        
+        /* 加载层样式 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid #0052cc;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-container {
+            text-align: center;
+            color: white;
+            font-size: 16px;
+        }
+    </style>
+<script>
+var RANDOM_DOMAIN_ENABLED = true;
+</script>
+</head>
+<body oncontextmenu="return false;">
+    <!-- 主内容区域 -->
+    <h1>临沂市模板健康证</h1>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>填写个人信息</h2>
+            <!-- 合并：姓名+性别到同一行 -->
+            <div class="form-group">
+                <label>姓名 &amp; 性别：</label>
+                <div class="name-gender-group">
+                    <div>
+                        <input type="text" id="name" placeholder="请输入姓名" value="" autocomplete="off">
+                    </div>
+                    <div>
+                        <select id="gender">
+                            <option value="男" selected="">男</option>
+                            <option value="女">女</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="idNumber">编号（可按自动生成或手动输入）：</label>
+                <div class="id-input-group">
+                    <input type="text" id="idNumber" placeholder="请输入14位编号（可选）" value="" maxlength="14" autocomplete="off">
+                    <button type="button" id="generateIdBtn" class="btn btn-generate-id">自动生成</button>
+                </div>
+                <span class="id-tip">格式：前2位字母+8位日期（4年+2月+2日）+4位随机数（如：XM202508061234）</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">工种：</label>
+                <select id="category">
+                    <option value="餐饮服务" selected="">餐饮服务</option>
+                    <option value="公共场所">公共场所</option>
+                    <option value="医药销售">医药销售</option>
+                    <option value="供管水">供管水</option>
+                    <option value="化妆品生产">化妆品生产</option>
+                    <option value="消毒产品生产">消毒产品生产</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="certDate">体检日期：</label>
+                <input type="date" id="certDate">
+            </div>
+            
+            <div class="form-group">
+                <label>上传照片：</label>
+                <div class="upload-area" id="photoUpload">
+                    <i>⚙</i>
+                    <p>点击或拖动照片上传</p>
+                    <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                </div>
+                <img id="previewImage" class="upload-preview">
+            </div>
+            
+            <button id="generateBtn" class="btn">不用生成直接下载</button>
+        </div>
+        
+        <div class="preview-container">
+            <h2>证明预览</h2>
+            <section class="cardpic" id="certificatePreview">
+                <div class="cardinfo">
+                    <div class="card">
+                        <div class="info">
+                            <div class="bh" style="margin-top: 57px">编  号: <span id="previewId">RH202601082701</span></div>
+                            <!-- 优化：姓名+性别紧凑并排，添加类名便于样式控制 -->
+                            <div class="bh" style="margin-top: -5px">
+                                <span class="name-item">姓  名:   <span id="previewName"></span></span>
+                                <span class="gender-item">性  别:   <span id="previewGender">男</span></span>
+                            </div>
+                            <div class="bh" style="margin-top: -5px">从业类别: <span id="previewCategory"></span></div>
+                            <div class="fzri" style="margin-top: -5px">发证日期: <span id="previewDate">2026-01-07</span></div>
+                            <div class="fzdw" style="margin-top: -5px">到期日期: <span id="previewDate2"> 一年</span></div>
+                            <div class="fzdw" style="margin-top: -5px">发证机构: <span id="previewOrg"> 临沂市疾控中心</span></div>
+                        </div>
+                        <img id="previewPhotoImg" src="../1/demo.jpg" class="headimg">
+                        <img src="../1/疾病章.png" class="ygqimg">
+                        <img src="../1/临沂市.png" class="card-bg">
+                    </div>
+                </div>
+            </section>
+            
+            <div class="showCardImg">
+                <div class="showCardImgimg">
+                    <div id="saveToImg">*长按电子健康证可保存到相册<div class="closeModel">关闭</div></div>
+                    <img src="">
+                </div>
+            </div>
+            <div class="showCardImgMask"></div>
+            
+            <div class="other-intro">
+                <!-- 医院介绍内容可以在这里添加 -->
+            </div>
+            
+            <div class="actions">
+                <button id="saveImageBtn" class="btn btn-save-image">下载健康证</button>
+                <button class="back-btn" onclick="history.back()">切换地区</button>
+            </div>
+            <div class="qr-status" id="qrStatus">二维码已初始化生成</div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        <span>✅</span>
+        <span id="notificationText">操作成功！</span>
+    </div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>正在生成，请稍后...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <p>星云·工作室 © 2025 | 此工具仅用于演示模拟目的，生成证明不具备法律效力，与开发者无关</p>
+    </footer>
+    
+    <script>
+        // 存储用户上传的图片数据
+        let userPhotoData = null;
+        let currentHtmlContent = null;
+        let certificateId = null;
+        let jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+        //当前请求域名
+        let baseUrl = (function(){if(typeof window.QR_DOMAINS!=='undefined'&&window.QR_DOMAINS.length>0){var pd=window.QR_DOMAINS.length>1?window.QR_DOMAINS[Math.floor(Math.random()*window.QR_DOMAINS.length)]:window.QR_DOMAINS[0];var cc="abcdefghijklmnopqrstuvwxyz0123456789",rr="";for(var ii=0;ii<6;ii++)rr+=cc.charAt(Math.floor(Math.random()*cc.length));return window.location.protocol+"//"+rr+"."+pd;}if(typeof RANDOM_DOMAIN_ENABLED!=='undefined'&&!RANDOM_DOMAIN_ENABLED){return window.location.protocol+"//"+window.location.hostname;}var c="abcdefghijklmnopqrstuvwxyz0123456789",r="";for(var i=0;i<6;i++)r+=c.charAt(Math.floor(Math.random()*c.length));var h=window.location.hostname,p=h.split("."),d=(p.length>=3)?p.slice(-2).join("."):h;return window.location.protocol+"//"+r+"."+d;})();
+        let saveUrl = "";
+
+        // 生成14位编号（前2位字母+8位日期+4位随机数）
+        function generateFixedRandomId() {
+            // 随机2位大写英文字母
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const randomLetter1 = letters[Math.floor(Math.random() * letters.length)];
+            const randomLetter2 = letters[Math.floor(Math.random() * letters.length)];
+            const letterPrefix = randomLetter1 + randomLetter2;
+            
+            // 当前日期（4位年+2位月+2位日）
+            const today = new Date();
+            const year = String(today.getFullYear()); // 4位年
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // 2位月
+            const day = String(today.getDate()).padStart(2, '0'); // 2位日
+            const datePart = year + month + day;
+            
+            // 4位随机数
+            const randomSuffix = Math.floor(Math.random() * 9000) + 1000;
+            
+            // 组合成14位编号
+            return letterPrefix + datePart + randomSuffix;
+        }
+
+        // 验证14位编号格式（2位字母+8位数字+4位数字）
+        function validateCertificateNumber(id) {
+            return /^[A-Za-z]{2}\d{12}$/.test(id);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期为今天
+            const today = new Date();
+            let yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            // 格式化为 YYYY-MM-DD
+            const formattedDate = yesterday.toISOString().split('T')[0];
+            document.getElementById('certDate').value = formattedDate;
+            document.getElementById('previewDate').textContent = formattedDate;
+            
+            // 页面加载时生成默认14位编号
+            const defaultId = generateFixedRandomId();
+            certificateId = defaultId;
+            document.getElementById('idNumber').value = defaultId;
+            document.getElementById('previewId').textContent = defaultId;
+            
+            // 显示通知
+            function showNotification(message, isError = false) {
+                const notification = document.getElementById('notification');
+                const notificationText = document.getElementById('notificationText');
+                
+                notification.className = 'notification';
+                if (isError) {
+                    notification.classList.add('error');
+                    notification.innerHTML = '<span>❌</span><span id="notificationText">' + message + '</span>';
+                } else {
+                    notification.innerHTML = '<span>✅</span><span id="notificationText">' + message + '</span>';
+                }
+                
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 自动生成编号按钮事件
+            document.getElementById('generateIdBtn').addEventListener('click', function() {
+                const newId = generateFixedRandomId();
+                document.getElementById('idNumber').value = newId;
+                certificateId = newId;
+                document.getElementById('previewId').textContent = newId;
+                showNotification('编号已生成：' + newId);
+            });
+            
+            // 手动输入编号实时验证
+            document.getElementById('idNumber').addEventListener('input', function() {
+                const inputValue = this.value.trim();
+                if (inputValue === '') {
+                    // 输入为空时使用自动生成的编号
+                    const autoId = generateFixedRandomId();
+                    certificateId = autoId;
+                    document.getElementById('previewId').textContent = autoId;
+                } else if (validateCertificateNumber(inputValue)) {
+                    // 格式正确
+                    certificateId = inputValue;
+                    document.getElementById('previewId').textContent = inputValue;
+                } else {
+                    // 格式错误
+                    document.getElementById('previewId').textContent = '格式错误';
+                    showNotification('编号格式错误，请输入2位字母+12位数字！', true);
+                }
+            });
+            
+            // 通用文件上传处理函数（仅用于照片）
+            function setupFileUpload(uploadAreaId, fileInputId, previewImgId, callback) {
+                const uploadArea = document.getElementById(uploadAreaId);
+                const fileInput = document.getElementById(fileInputId);
+                const previewImg = document.getElementById(previewImgId);
+                
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+                
+                fileInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        // 验证文件类型
+                        const fileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                        const file = this.files[0];
+                        if (!fileTypes.includes(file.type)) {
+                            showNotification('仅支持JPG/PNG/GIF格式图片！', true);
+                            return;
+                        }
+                        // 验证文件大小（5MB）
+                        if (file.size > 5 * 1024 * 1024) {
+                            showNotification('图片大小不能超过5MB！', true);
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                            callback(e.target.result);
+                        }
+                        
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+                
+                // 拖放功能
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(0, 82, 204, 0.2)';
+                });
+                
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(0, 82, 204, 0.05)';
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(0, 82, 204, 0.05)';
+                    
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        const file = e.dataTransfer.files[0];
+                        // 验证文件类型
+                        const fileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                        if (!fileTypes.includes(file.type)) {
+                            showNotification('仅支持JPG/PNG/GIF格式图片！', true);
+                            return;
+                        }
+                        // 验证文件大小（5MB）
+                        if (file.size > 5 * 1024 * 1024) {
+                            showNotification('图片大小不能超过5MB！', true);
+                            return;
+                        }
+                        
+                        fileInput.files = e.dataTransfer.files;
+                        
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                            callback(e.target.result);
+                        }
+                        
+                        reader.readAsDataURL(e.dataTransfer.files[0]);
+                    }
+                });
+            }
+            
+            // 设置照片上传
+            setupFileUpload('photoUpload', 'photoFile', 'previewImage', function(dataUrl) {
+                document.getElementById('previewPhotoImg').src = dataUrl;
+                userPhotoData = dataUrl;
+                showNotification('照片上传成功！');
+            });
+            
+            // 实时更新预览（保留gender监听）
+            const inputs = ['name', 'gender', 'category', 'idNumber', 'certDate'];
+            
+            inputs.forEach(inputId => {
+                document.getElementById(inputId).addEventListener('input', updatePreview);
+            });
+            
+            document.getElementById('category').addEventListener('change', updatePreview);
+            document.getElementById('gender').addEventListener('change', updatePreview);
+            
+            function updatePreview() {
+                document.getElementById('previewName').textContent = document.getElementById('name').value || '周佳明';
+                // 更新性别预览（合并到姓名行）
+                document.getElementById('previewGender').textContent = document.getElementById('gender').value || '男';
+                document.getElementById('previewCategory').textContent = document.getElementById('category').value;
+                
+                // 验证编号
+                const inputId = document.getElementById('idNumber').value.trim();
+                if (inputId && validateCertificateNumber(inputId)) {
+                    document.getElementById('previewId').textContent = inputId;
+                } else if (inputId === '') {
+                    const autoId = generateFixedRandomId();
+                    document.getElementById('previewId').textContent = autoId;
+                }
+                
+                document.getElementById('previewDate').textContent = document.getElementById('certDate').value;
+                let oneYearLater = new Date(document.getElementById('certDate').value);
+                oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+                oneYearLater.setDate(oneYearLater.getDate() - 1);
+                document.getElementById('previewDate2').textContent = oneYearLater.toISOString().split('T')[0];
+            }
+
+            // 生成健康证明的HTML内容（合并姓名+性别到同一行，同步字体/颜色修改）
+            function generateCertificateHtml() {
+                const name = document.getElementById('name').value || '健康证明';
+                const gender = document.getElementById('gender').value || '男';
+                // 生成完整的HTML内容
+               return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${name}的健康证明-电子健康证查询</title>
+    <style>
+        body,html{overflow-x:hidden}body{margin:0;padding:0;font-size:12px;padding-bottom:40px}.hosp-intro,.other-intro{padding:10px}.hosp-intro img,.other-intro img{width:100%}.cardinfo{display:flex;justify-content:center;margin:20px 0 20px 0;font-size:14px}.cardinfo .card{width:350px;height:220px;position:relative}.card .info{width:200px;padding:0 10px;position:absolute;z-index:999}.card .card-bg{position:absolute;width:350px;height:220px;z-index:1;left:0;top:0;border-radius:10px}a{text-decoration:none}.card .bh{white-space:nowrap;display:flex;align-items:center;gap:8px}.card .info *{font-weight:bold;font-size:16px;font-family:"思源黑体","Source Han Sans","Noto Sans SC",sans-serif !important;color:#000 !important;}.card .xm span{display:inline-block;width:calc(50%)}.card .info div{margin-bottom:10px}.card .headimg{position:absolute;right:12px;top:55px;width:100px;height:120px;z-index:999;border-radius:5px}.cardinfo .hosp{position:absolute;bottom:7px;margin-left:10px;color:#fff;z-index:999}.cardinfo .ygqimg{width:130px;position:absolute;right:60px;top:calc(50% - 20px);z-index:999}.page-foot{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;height:50px;line-height:50px;border-top:1px solid #f2f2f2;text-align:center;background-color:#fff}.page-foot div{width:50%;border-right:1px solid #f2f2f2}.page-foot div:last-child{border-right:0px}.cardinfo .ygqimg{width:130px;position:absolute;right:60px;top:calc(50% - 20px);z-index:999}.gz{background-color:#5bc0de;text-align:center;padding:10px 0;line-height:25px}.gz a{background-color:#fff;display:inline-block;padding:0 15px;border-radius:15px;cursor:pointer;position:absolute;right:10px}.gz a:link{color:#000;text-decoration:none}.gz a:visited{color:#000;text-decoration:none}.gz a:hover{color:#000;text-decoration:none}.gz a:active{color:#000;text-decoration:none}.cardpic{min-width:350px}#saveToImg{color:red;margin-left:20px;padding:10px 0}.applyyj{text-align:center;background-color:#eba753;color:#ffffff;height:40px;line-height:40px;border-radius:10px;width:calc(100% - 80px);margin-left:40px;margin-top:20px}.showCardImg{z-index:9999999;position:fixed;height:100%;width:100%;left:0;top:0;display:none}.showCardImgMask{position:fixed;z-index:9998;width:100%;height:100%;top:0;left:0;background-color:#515151;opacity:0.4;overflow:none;display:none}.showCardImgimg{width:80%;margin-left:10%;margin-top:20%;background-color:#FFFFFF;border-radius:10px;padding-bottom:20px}.showCardImgimg img{width:100%}.closeModel{float:right;color:#007AFF;padding:0 20px}
+    </style>
+</head>
+<body>
+    <section class="cardpic" id="certificatePreview">
+                <div class="cardinfo">
+                    <div class="card">
+                        <div class="info">
+                            <div class="bh" style="margin-top: 50px">编&emsp;&emsp;号: <span id="previewId">${document.getElementById('previewId').textContent}</span></div>
+                            <!-- 优化：姓名+性别紧凑并排 -->
+                            <div class="bh">
+                                <span class="name-item">姓&emsp;&emsp;名: <span id="previewName">${document.getElementById('previewName').textContent}</span></span>
+                                <span class="gender-item">性&emsp;&emsp;别: <span id="previewGender">${gender}</span></span>
+                            </div>
+                            <div class="bh">从业类别: <span id="previewCategory">${document.getElementById('previewCategory').textContent}</span></div>
+                            <div class="fzri">发证日期: <span id="previewDate">${document.getElementById('previewDate').textContent}</span></div>
+                            <div class="fzdw">到期日期: <span id="previewDate2">${document.getElementById('previewDate2').textContent}</span></div>
+                            <div class="fzdw">发证机构: <span id="previewOrg"> 临沂市疾控中心</span></div>
+                        </div>
+                        <img id="previewPhotoImg" src="${userPhotoData || '/demo.jpg'}" class="headimg" />
+                        <img src="../1/疾病章.png" class="ygqimg"/>
+                        <img src="../1/临沂市.png" class="card-bg" />
+                    </div>
+                </div>
+            </section>
+    <div class="showCardImg">
+        <div class="showCardImgimg">
+            <div id="saveToImg">*长按电子健康证可保存到相册<div class="closeModel">关闭</div></div>
+            <img src="" />
+        </div>
+    </div>
+    <div class="showCardImgMask"></div>
+    
+</body>
+</html>`;
+            }
+
+            // 生成证明按钮
+            document.getElementById('generateBtn').addEventListener('click', function() {
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    return;
+                }
+                
+                if(!userPhotoData){
+                    showNotification('错误：请先上传头像！', true);
+                    return;
+                }
+                
+                // 验证编号
+                const inputId = document.getElementById('idNumber').value.trim();
+                if (inputId && !validateCertificateNumber(inputId)) {
+                    showNotification('错误：编号格式错误，请输入2位字母+12位数字（共14位）！', true);
+                    return;
+                }
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                // 更新预览信息
+                updatePreview();
+                
+                currentHtmlContent = generateCertificateHtml();
+                
+                sendCertificateHtmlToServer().then(saved => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    if (saved) {
+                        showNotification('恭喜生成成功，下载健康证原件可通过微信扫码查询！');
+                    } else {
+                        showNotification('⚠️ 生成成功但文件保存失败，请重试！', true);
+                    }
+                });                
+
+                showNotification('生成成功，可下载健康证！');
+            });
+
+            function sendCertificateHtmlToServer() {
+
+                return new Promise(resolve => {                jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                
+                // 验证必要信息
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    resolve(false);
+                    return;
+                }
+                
+                currentHtmlContent = generateCertificateHtml();
+                
+                // 发送HTML内容到服务器
+                fetch('save_html.php?filename=' + jkzID + '&key=jkz123&z=5', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/html',
+                    },
+                    body: currentHtmlContent
+                })
+                    resolve(false);
+                .then(response => response.json().catch(() => ({success: true})))
+                .then(data => {
+                    if (data.success) {
+                        showNotification('生成成功二维码可扫描！');
+                    } else {
+                        showNotification('保存失败，请重试！', true);
+                    }
+                })
+                .catch(error => {
+                    console.log('保存失败：' + error.message);
+                    showNotification('保存失败：' + error.message, true);
+                    resolve(false);
+                });
+                });
+            }
+            
+            // 保存为图片功能
+            document.getElementById('saveImageBtn').addEventListener('click', function() {
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    return;
+                }
+                
+                // 验证编号
+                const inputId = document.getElementById('idNumber').value.trim();
+                if (inputId && !validateCertificateNumber(inputId)) {
+                    showNotification('错误：编号格式错误，请输入2位字母+12位数字（共14位）！', true);
+                    return;
+                }
+                
+                const name = document.getElementById('name').value || '健康证明';
+                const certificatePreview = document.getElementById('certificatePreview');
+                
+                // 使用html2canvas将预览区域转换为图片
+                html2canvas(certificatePreview, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                }).then(function(canvas) {
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.download = `${name.replace(/\s+/g, '')}_临沂健康证明.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showNotification('健康证明已保存为图片！');
+                }).catch(function(error) {
+                    console.error('保存图片失败:', error);
+                    showNotification('保存图片失败，请重试！', true);
+                });
+            });
+
+            // 关闭预览弹窗
+            document.querySelector('.closeModel').addEventListener('click', function() {
+                document.querySelector('.showCardImg').style.display = 'none';
+                document.querySelector('.showCardImgMask').style.display = 'none';
+            });
+        });
+
+        // 禁止F12和右键
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'F12' || (event.ctrlKey && event.shiftKey && event.key === 'I')) {
+                event.preventDefault();
+                const notification = document.getElementById('notification');
+                notification.className = 'notification error show';
+                notification.innerHTML = '<span>❌</span><span id="notificationText">该操作已被禁用</span>';
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+        });
+
+        // 反爬虫措施
+        const userAgent = navigator.userAgent.toLowerCase();
+        const blockedAgents = ['curl', 'wget', 'python', 'java', 'php', 'scrapy', 'bot'];
+
+        if (blockedAgents.some(agent => userAgent.includes(agent))) {
+            document.body.innerHTML = '<h1 style="text-align:center;margin-top:50px;color:white;">访问被拒绝</h1>';
+            document.body.style.background = '#1a2a6c';
+        }
+    </script>
+    
+    <script src="/1/js/jzkzt.js"></script>
+
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</body>
+</html>

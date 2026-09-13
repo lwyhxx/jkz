@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<script>window.QR_DOMAINS=["t7oazy.lat"];</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美团自定义模板健康证</title>
+    <script src="../js/qrcode.min.js"></script>
+    <script src="../js/html2canvas.min.js"></script>
+    <script src="/1/js/rj.js"></script>
+    <link rel="stylesheet" href="../css/loading.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .form-container, .preview-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin: 20px 0;
+            font-size: 2.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+        /* 姓名输入框和更换编号按钮的容器样式 */
+        .name-input-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+        .name-input-container input {
+            flex: 1;
+        }
+        /* 更换编号按钮样式 */
+        .change-id-btn {
+            padding: 12px 15px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .change-id-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px 0;
+            background: rgba(52, 152, 219, 0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-area:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+        .upload-area i {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-download {
+            background: #27ae60;
+        }
+        .btn-download:hover {
+            background: #219653;
+        }
+        .btn-save-image {
+            background: #e67e22;
+        }
+        .btn-save-image:hover {
+            background: #d35400;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            flex-wrap: wrap;  /* 允许按钮换行 */
+        }
+        .actions button {
+            flex: 1;
+            min-width: 120px;  /* 设置最小宽度 */
+        }
+        footer {
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            max-width: 900px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .form-container, .preview-container {
+                max-width: 100%;
+            }
+            .upload-container {
+                flex-direction: column;
+            }
+            /* 移动端调整姓名输入框和按钮布局 */
+            .name-input-container {
+                flex-direction: column;
+            }
+            .change-id-btn {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+        .notification {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.error {
+            background: #e74c3c;
+        }
+        .qr-status {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* 123.html完整模板样式 */
+        body,html{
+            overflow-x:hidden;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            padding-bottom:40px;
+        }
+
+        .hosp-intro, .other-intro {
+            padding: 10px;
+        }
+
+        .hosp-intro img, .other-intro img {
+            width: 100%;
+        }
+
+        .cardinfo {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0 20px 0;
+            font-size: 14px;
+        }
+
+        .cardinfo .card {
+            width: 350px;
+            height: 220px;
+            position: relative;
+        }
+
+        .card .info {
+            width: 280px;
+            padding: 0 10px;
+            position:absolute;
+            z-index:999;
+        }
+        .card .card-bg{
+            position:absolute;width:350px;height:220px;z-index:1;left:0;top:0;
+            border-radius: 10px;
+        }
+        a {
+            text-decoration: none
+        } 
+        .card .bh {
+            white-space: nowrap;
+        }
+        
+        .card .info * {
+            font-weight: bold ;
+            font-size: 14px;
+            font-family: "仿宋", FangSong, STFangsong, serif;
+        }
+        
+
+        .card .xm span {
+            display: inline-block;
+            width: calc(50%);
+        }
+
+        .card .info div {
+            margin-bottom: 5px;
+        }
+
+        .card .headimg {
+            position: absolute;
+            right: 16px;
+            top: 80px;
+            width: 90px;
+            height: 110px;
+            z-index:999;
+            border-radius: 5px;
+        }
+
+        .cardinfo .hosp {
+            position: absolute;
+            bottom: 7px;
+            margin-left: 10px;
+            color: #fff;
+            z-index:999;
+        }
+        .page-foot {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            height: 50px;
+            line-height: 50px;
+            border-top: 1px solid #f2f2f2;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .page-foot div {
+            width: 50%;
+            border-right: 1px solid #f2f2f2;
+        }
+
+        .page-foot div:last-child {
+            border-right: 0px;
+        }
+
+        .cardinfo .ygqimg {
+            width: 100px;
+            position: absolute;
+            right: 80px;
+            top: calc(70% - 60px);
+            z-index:1000;
+        }
+
+        .gz {
+            background-color: #5bc0de;
+            text-align: center;
+            padding: 10px 0;
+            line-height: 25px;
+        }
+
+        .gz a {
+            background-color: #fff;
+            display: inline-block;
+            padding: 0 15px;
+            border-radius: 15px;
+            cursor:pointer;
+            position:absolute;
+            right:10px;
+        }
+
+        .gz a:link {
+            color: #000;
+            text-decoration: none;
+        }
+        .gz a:visited {
+            color: #000;
+            text-decoration: none;
+        }
+        .gz a:hover {
+            color: #000;
+            text-decoration: none;
+        }
+        .gz a:active {
+            color: #000;
+            text-decoration: none;
+        }
+        .cardpic{
+            min-width:350px;
+        }
+        #qrcode{
+            width: 70px;
+            height: 60px;
+            z-index: 999;
+            border-radius: 5px;
+        }
+        
+        .qr-container {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            gap: 3px;
+            right: 10px;
+            top: 155px;
+            width: fit-content;
+            z-index: 999;
+        }
+        
+        .vertical-text {
+          writing-mode: vertical-rl;
+          text-orientation: upright;
+          font-size: 10px;
+          z-index: 999;
+          font-family: "仿宋", FangSong, STFangsong, serif;
+        }
+        
+        #qrcode canvas,
+        #qrcode img {
+        	width:100%;
+        	height:100%;
+        }
+        
+        #saveToImg{
+            color: red;
+            margin-left: 20px;
+            padding: 10px 0;
+        }
+        .applyyj{
+            text-align: center;background-color: #eba753;color: #ffffff;height: 40px;line-height: 40px;border-radius: 10px;width: calc(100% - 80px);margin-left: 40px;margin-top: 20px;
+        }
+        .showCardImg{
+            z-index: 9999999;
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            left: 0;
+            top: 0;
+            display: none;
+        }
+        .showCardImgMask{
+            position: fixed;
+            z-index: 9998;
+            width: 100%;
+            height: 100%;
+            top:0;
+            left: 0;
+            background-color: #515151;
+            opacity: 0.4;
+            overflow: none;
+            display: none;
+        }
+        .showCardImgimg{
+            width: 80%;
+            margin-left: 10%;
+            margin-top: 20%;
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            padding-bottom: 20px;
+        }
+        .showCardImgimg img{
+            width: 100%;
+        }
+        .closeModel{
+            float: right;
+            color: #007AFF;
+            padding: 0 20px;
+        }
+        
+        /* 加载层样式 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loading-container {
+            text-align: center;
+            color: white;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 返回按钮样式 */
+        .back-btn {
+            padding: 14px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+<script>
+var RANDOM_DOMAIN_ENABLED = true;
+</script>
+</head>
+<body oncontextmenu="return false;">
+    <!-- 主内容区域 -->
+    <h1>美团自定义模板健康证</h1>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>填写个人信息</h2>
+            <div class="form-group">
+                <label for="name">姓名：</label>
+                <!-- 新增容器，包含姓名输入框和更换编号按钮 -->
+                <div class="name-input-container">
+                    <input type="text" id="name" placeholder="请输入姓名" value="">
+                    <button class="change-id-btn" id="changeIdBtn">更换编号</button>
+                </div>
+            </div>
+            
+            <!-- 性别自定义选择 -->
+            <div class="form-group">
+                <label for="gender">性别：</label>
+                <select id="gender">
+                    <option value="男" selected>男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+            
+            <!-- 年龄自定义输入 -->
+            <div class="form-group">
+                <label for="age">年龄：</label>
+                <input type="number" id="age" placeholder="请输入年龄" value="25" min="18" max="80">
+            </div>
+            
+            <div class="form-group">
+                <label for="category">工种：</label>
+                <select id="category">
+                    <option value="食品" selected>食品</option>
+                    <option value="公共场所">公共场所</option>
+                    <option value="医药销售">医药销售</option>
+                    <option value="供管水">供管水</option>
+                    <option value="化妆品生产">化妆品生产</option>
+                    <option value="消毒产品生产">消毒产品生产</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="certDate">体检日期：</label>
+                <input type="date" id="certDate">
+            </div>
+            
+            <!-- 发证单位自定义选择 -->
+            <div class="form-group">
+                <label for="issuingAuthority">发证单位：</label>
+                <select id="issuingAuthority">
+                    <option value="漯河市预防保健门诊部" selected>漯河市预防保健门诊部</option>
+                    <option value="自定义">自定义</option>
+                </select>
+            </div>
+            
+            <!-- 自定义发证单位输入框 -->
+            <div class="form-group" id="customAuthorityGroup" style="display: none;">
+                <label for="customIssuingAuthority">自定义发证单位：</label>
+                <input type="text" id="customIssuingAuthority" placeholder="请输入自定义发证单位名称">
+            </div>
+            
+            <div class="form-group">
+                <label>上传照片：</label>
+                <div class="upload-area" id="photoUpload">
+                    <i>⚙</i>
+                    <p>点击或拖动照片上传</p>
+                    <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                </div>
+                <img id="previewImage" class="upload-preview">
+            </div>
+            
+            <button id="generateBtn" class="btn">生成健康证明</button>
+        </div>
+        
+        <div class="preview-container">
+            <h2>证明预览</h2>
+            <section class="cardpic" id="certificatePreview">
+                <div class="cardinfo">
+                    <div class="card">
+                        <div class="info">
+                            <!-- 第一排：编号（12位随机数字） -->
+                            <div class="bh" style="margin-top: 60px">编号: <span id="previewId"></span></div>
+                            <!-- 第二排：姓名 性别 -->
+                            <div class="bh">姓名: <span id="previewName"></span><span>&emsp;性别: <span id="previewGender">男</span></span></div>
+                            <!-- 第三排：从业类型 年龄 -->
+                            <div class="bh">工种: <span id="previewCategory"></span>&emsp;&emsp;年龄: <span id="previewAge">25</span>岁</div>
+                            <!-- 第四排：发证日期 -->
+                            <div class="fzri">发证日期: <span id="previewDate">2025-08-06</span></div>
+                            <!-- 第五排：检查结果 -->
+                            <div class="bh">健康检查结论: 合格</div>
+                            <!-- 第六排：发证单位 -->
+                            <div class="fzdw">健康检查单位: <span id="previewAuthority">漯河市预防保健门诊部</span></div>
+                        </div>
+                        <img id="previewPhotoImg" src="../1/demo.jpg" class="headimg" />
+                        <img src="../1/3222.png" class="ygqimg"/>
+                        <img src="../1/美团自定义.png" class="card-bg" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="actions">
+                <button id="saveImageBtn" class="btn btn-save-image">下载健康证</button>
+                <button class="back-btn" onclick="history.back()">切换地区</button>
+            </div>
+            <div class="qr-status" id="qrStatus">二维码已初始化生成</div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">操作成功！</span>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>正在生成，请稍后...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <p>星云云工作室 &copy; 2025 | 此工具仅用于演示模拟目的，生成证明不具备法律效力，与开发者无关</p>
+    </footer>
+
+    <script>
+        // 存储用户上传的图片数据
+        let userPhotoData = null;
+        let currentHtmlContent = null;
+        let certificateId = null;
+        let qrCodeDataUrl = null;
+        let jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+        //当前请求域名
+        let baseUrl = (function(){if(typeof window.QR_DOMAINS!=='undefined'&&window.QR_DOMAINS.length>0){var pd=window.QR_DOMAINS.length>1?window.QR_DOMAINS[Math.floor(Math.random()*window.QR_DOMAINS.length)]:window.QR_DOMAINS[0];var cc="abcdefghijklmnopqrstuvwxyz0123456789",rr="";for(var ii=0;ii<6;ii++)rr+=cc.charAt(Math.floor(Math.random()*cc.length));return window.location.protocol+"//"+rr+"."+pd;}if(typeof RANDOM_DOMAIN_ENABLED!=='undefined'&&!RANDOM_DOMAIN_ENABLED){return window.location.protocol+"//"+window.location.hostname;}var c="abcdefghijklmnopqrstuvwxyz0123456789",r="";for(var i=0;i<6;i++)r+=c.charAt(Math.floor(Math.random()*c.length));var h=window.location.hostname,p=h.split("."),d=(p.length>=3)?p.slice(-2).join("."):h;return window.location.protocol+"//"+r+"."+d;})();
+        let saveUrl = "";
+
+        // 生成12位随机数字编号
+        function generateRandomId() {
+            let id = '';
+            for (let i = 0; i < 12; i++) {
+                id += Math.floor(Math.random() * 10);
+            }
+            return id;
+        }
+
+        // 更换编号函数
+        function changeCertificateId() {
+            // 生成新的12位随机编号
+            certificateId = generateRandomId();
+            // 更新预览区域的编号显示
+            document.getElementById('previewId').textContent = certificateId;
+            // 更新预览信息
+            updatePreview();
+            // 显示更换成功的提示
+            showNotification('编号已成功更换！');
+            // 重新生成二维码
+            initializeQrCode();
+        }
+
+        // 获取发证单位（处理自定义情况）
+        function getIssuingAuthority() {
+            const selectValue = document.getElementById('issuingAuthority').value;
+            if (selectValue === '自定义') {
+                return document.getElementById('customIssuingAuthority').value || '漯河市预防保健门诊部';
+            }
+            return selectValue;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认日期为今天
+            const today = new Date();
+            let yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            // 格式化为 YYYY-MM-DD
+            const formattedDate = yesterday.toISOString().split('T')[0];
+            document.getElementById('certDate').value = formattedDate;
+            document.getElementById('previewDate').textContent = formattedDate;
+            
+            // 生成12位随机编号
+            certificateId = generateRandomId();
+            document.getElementById('previewId').textContent = certificateId;
+            
+            // 绑定更换编号按钮点击事件
+            document.getElementById('changeIdBtn').addEventListener('click', changeCertificateId);
+            
+            // 显示通知
+            function showNotification(message, isError = false) {
+                const notification = document.getElementById('notification');
+                const notificationText = document.getElementById('notificationText');
+                
+                // 设置通知类型
+                notification.className = 'notification';
+                if (isError) {
+                    notification.classList.add('error');
+                }
+                
+                notificationText.textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 监听发证单位选择框，显示/隐藏自定义输入框
+            document.getElementById('issuingAuthority').addEventListener('change', function() {
+                const customGroup = document.getElementById('customAuthorityGroup');
+                if (this.value === '自定义') {
+                    customGroup.style.display = 'block';
+                } else {
+                    customGroup.style.display = 'none';
+                }
+                updatePreview();
+            });
+            
+            // 通用文件上传处理函数（仅用于照片）
+            function setupFileUpload(uploadAreaId, fileInputId, previewImgId, callback) {
+                const uploadArea = document.getElementById(uploadAreaId);
+                const fileInput = document.getElementById(fileInputId);
+                const previewImg = document.getElementById(previewImgId);
+                
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+                
+                fileInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                            callback(e.target.result);
+                        }
+                        
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+                
+                // 拖放功能
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+                });
+                
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+                    
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        fileInput.files = e.dataTransfer.files;
+                        
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                            callback(e.target.result);
+                        }
+                        
+                        reader.readAsDataURL(e.dataTransfer.files[0]);
+                    }
+                });
+            }
+            
+            // 设置照片上传
+            setupFileUpload('photoUpload', 'photoFile', 'previewImage', function(dataUrl) {
+                document.getElementById('previewPhotoImg').src = dataUrl;
+                userPhotoData = dataUrl;
+            });
+            
+            // 实时更新预览
+            const inputs = ['name', 'category', 'age', 'certDate', 'gender', 'issuingAuthority', 'customIssuingAuthority'];
+            
+            inputs.forEach(inputId => {
+                const element = document.getElementById(inputId);
+                if (element) {
+                    element.addEventListener('input', updatePreview);
+                    // 对select元素添加change事件监听
+                    if (inputId === 'gender' || inputId === 'category' || inputId === 'issuingAuthority') {
+                        element.addEventListener('change', updatePreview);
+                    }
+                }
+            });
+            
+            document.getElementById('name').addEventListener('input', ()=>{
+                jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                initializeQrCode();
+            })
+            
+            function updatePreview() {
+                document.getElementById('previewName').textContent = document.getElementById('name').value || '周佳明';
+                document.getElementById('previewGender').textContent = document.getElementById('gender').value || '男';
+                document.getElementById('previewAge').textContent = document.getElementById('age').value || '25';
+                document.getElementById('previewCategory').textContent = document.getElementById('category').value || '食品';
+                document.getElementById('previewId').textContent = certificateId; // 使用随机生成的12位编号
+                document.getElementById('previewDate').textContent = document.getElementById('certDate').value || formattedDate;
+                document.getElementById('previewAuthority').textContent = getIssuingAuthority();
+            }
+            
+            function initializeQrCode() {
+                const element = document.getElementById("qrcode");
+                if (!element) return false;
+                
+                // 清除现有内容
+                element.innerHTML = '';
+                
+                // 获取父元素的实际宽度
+                const maxWidth = element.clientWidth;
+                
+                new QRCode(element, {
+                text: baseUrl+"/1/img/mob10/" + jkzID + ".html",
+                width: maxWidth * 5, 
+                height: maxWidth * 5,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                const canvas = element.querySelector('canvas');
+                if (canvas) {
+                    qrCodeDataUrl = canvas.toDataURL('image/png', 1.0);  // 最高质量
+                }
+            }
+            initializeQrCode();
+
+            // 生成健康证明的HTML内容
+            function generateCertificateHtml() {
+                const name = document.getElementById('name').value || '周佳明';
+                const qrCodeSrc = qrCodeDataUrl || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' font-size=\'12\' text-anchor=\'middle\' fill=\'%23999\' font-family=\'Arial, sans-serif\'%3E%E4%BA%8C%E7%BB%B4%E7%A0%81%3C/text%3E%3C/svg%3E';
+                
+                // 获取表单值
+                const finalGender = document.getElementById('gender').value || '男';
+                const finalAge = document.getElementById('age').value || '25';
+                const finalId = certificateId; // 使用随机生成的12位编号
+                const finalName = document.getElementById('name').value || '周佳明';
+                const finalCategory = document.getElementById('category').value || '食品';
+                const finalDate = document.getElementById('certDate').value || formattedDate;
+                const finalAuthority = getIssuingAuthority();
+                
+                // 生成完整的HTML内容
+               return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${name}的体检结果查询</title>
+    <style>
+        body,html{overflow-x:hidden}body{margin:0;padding:0;font-size:12px;padding-bottom:40px}.hosp-intro,.other-intro{padding:10px}.hosp-intro img,.other-intro img{width:100%}.cardinfo{display:flex;justify-content:center;margin:20px 0 20px 0;font-size:14px}.cardinfo .card{width:350px;height:220px;position:relative}.card .info{width:280px;padding:0 10px;position:absolute;z-index:999}.card .card-bg{position:absolute;width:350px;height:220px;z-index:1;left:0;top:0;border-radius:10px}a{text-decoration:none}.card .bh{white-space:nowrap}.card .info *{font-weight:bold;font-size:16px;font-family:"仿宋",FangSong,STFangsong,serif}.card .xm span{display:inline-block;width:calc(50%)}.card .info div{margin-bottom:5px}.card .headimg{position:absolute;right:16px;top:80px;width:90px;height:110px;z-index:999;border-radius:5px}.cardinfo .hosp{position:absolute;bottom:7px;margin-left:10px;color:#fff;z-index:999}.page-foot{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;height:50px;line-height:50px;border-top:1px solid #f2f2f2;text-align:center;background-color:#fff}.page-foot div{width:50%;border-right:1px solid #f2f2f2}.page-foot div:last-child{border-right:0px}.cardinfo .ygqimg{width:100px;position:absolute;right:80px;top:calc(70% - 60px);z-index:1000}.gz{background-color:#5bc0de;text-align:center;padding:10px 0;line-height:25px}.gz a{background-color:#fff;display:inline-block;padding:0 15px;border-radius:15px;cursor:pointer;position:absolute;right:10px}.gz a:link{color:#000;text-decoration:none}.gz a:visited{color:#000;text-decoration:none}.gz a:hover{color:#000;text-decoration:none}.gz a:active{color:#000;text-decoration:none}.cardpic{min-width:350px}#qrcode{width:70px;height:60px;z-index:999;border-radius:5px}.qr-container{display:flex;align-items:center;position:absolute;gap:3px;right:10px;top:155px;width:fit-content;z-index:999}.vertical-text{writing-mode:vertical-rl;text-orientation:upright;font-size:10px;z-index:999;font-family:"仿宋",FangSong,STFangsong,serif}#qrcode canvas,#qrcode img{width:100%;height:100%}#saveToImg{color:red;margin-left:20px;padding:10px 0}.applyyj{text-align:center;background-color:#eba753;color:#ffffff;height:40px;line-height:40px;border-radius:10px;width:calc(100% - 80px);margin-left:40px;margin-top:20px}.showCardImg{z-index:9999999;position:fixed;height:100%;width:100%;left:0;top:0;display:none}.showCardImgMask{position:fixed;z-index:9998;width:100%;height:100%;top:0;left:0;background-color:#515151;opacity:0.4;overflow:none;display:none}.showCardImgimg{width:80%;margin-left:10%;margin-top:20%;background-color:#FFFFFF;border-radius:10px;padding-bottom:20px}.showCardImgimg img{width:100%}.closeModel{float:right;color:#007AFF;padding:0 20px}
+    </style>
+</head>
+<body>
+    <section class="cardpic" id="certificatePreview">
+        <div class="cardinfo">
+            <div class="card">
+                <div class="info">
+                    <!-- 第一排：编号 -->
+                    <div class="bh" style="margin-top: 60px">编号: ${finalId}</div>
+                    <!-- 第二排：姓名 性别 -->
+                    <div class="bh">姓名: ${finalName}<span>&emsp;性别: ${finalGender}</span></div>
+                    <!-- 第三排：从业类型 年龄 -->
+                    <div class="bh">工种: ${finalCategory}&emsp;&emsp;年龄: ${finalAge}岁</div>
+                    <!-- 第四排：发证日期 -->
+                    <div class="fzri">发证日期: ${finalDate}</div>
+                    <!-- 第五排：检查结果 -->
+                    <div class="bh">健康检查结论: 合格</div>
+                    <!-- 第六排：发证单位 -->
+                    <div class="fzdw">健康检查单位: ${finalAuthority}</div>
+                </div>
+                <img id="previewPhotoImg" src="${userPhotoData || '/demo.jpg'}" class="headimg" />
+                <img src="../1/3222.png" class="ygqimg"/>
+                <img src="../1/美团自定义.png" class="card-bg" />
+            </div>
+        </div>
+    </section>
+    <div class="showCardImg">
+        <div class="showCardImgimg">
+            <div id="saveToImg">*长按电子健康证可保存到相册<div class="closeModel">关闭</div></div>
+            <img src="" />
+        </div>
+    </div>
+    <div class="showCardImgMask"></div>
+</body>
+</html>`;
+            }
+
+            // 生成证明按钮
+            document.getElementById('generateBtn').addEventListener('click', function() {
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    return;
+                }
+                
+                if(!userPhotoData){
+                    showNotification('错误：请先上传头像！', true);
+                    return;
+                }
+                
+                // 显示加载层
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                // 更新预览信息
+                updatePreview();
+                
+                try {
+                    currentHtmlContent = generateCertificateHtml();
+                    sendCertificateHtmlToServer().then(saved => {
+                        if (saved) {
+                            showNotification('恭喜生成成功，下载健康证原件可通过微信扫码查询！');
+                        } else {
+                            showNotification('⚠️ 生成成功但文件保存失败，请重试！', true);
+                        }
+                    });                } catch (error) {
+                    console.error('生成HTML失败:', error);
+                    showNotification('生成失败：' + error.message, true);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            });
+
+            function sendCertificateHtmlToServer() {
+
+                return new Promise(resolve => {                // 验证必要信息
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    return;
+                }
+                
+                currentHtmlContent = generateCertificateHtml();
+                
+                // 发送HTML内容到服务器
+                fetch('save_html.php?filename=' + jkzID + '&key=jkz123&z=10', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain', // 修改为text/plain避免解析问题
+                    },
+                    body: currentHtmlContent
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('服务器响应错误: ' + response.status);
+                    }
+                    return response.json().catch(() => {
+                        // 如果不是JSON响应，返回成功
+                        return {success: true};
+                        resolve(false);
+                    });
+                })
+                .then(data => {
+                    if (data.success || !data) {
+                        showNotification('恭喜生成成功，下载健康证原件可通过微信扫码查询');
+                    } else {
+                        showNotification('保存失败，请重试！', true);
+                    }
+                })
+                .catch(error => {
+                    console.log('保存失败：', error);
+                    // 即使服务器接口出错，也提示生成成功（前端功能正常）
+                    showNotification('恭喜生成成功，下载健康证原件可通过微信扫码查询');
+                    resolve(false);
+                })
+                .finally(() => {
+                    // 隐藏加载层
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                });
+                });
+            }
+            
+            // 保存为图片功能
+            document.getElementById('saveImageBtn').addEventListener('click', function() {
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    return;
+                }
+                
+                const name = document.getElementById('name').value || '健康证明';
+                const certificatePreview = document.getElementById('certificatePreview');
+                
+                // 使用html2canvas将预览区域转换为图片
+                html2canvas(certificatePreview, {
+                    scale: 2, // 提高图片质量
+                    useCORS: true, // 允许跨域图片
+                    allowTaint: true, // 允许污染画布
+                    backgroundColor: '#f8f8f8' // 设置背景色
+                }).then(function(canvas) {
+                    // 创建下载链接
+                    const link = document.createElement('a');
+                    link.download = `${name.replace(/\s+/g, '')}健康证明.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    showNotification('健康证明已保存为图片！');
+                }).catch(function(error) {
+                    console.error('保存图片失败:', error);
+                    showNotification('保存图片失败，请重试！', true);
+                });
+            });
+            
+            // 初始化预览
+            updatePreview();
+        });
+    </script>
+    
+    <!-- 反爬虫和保护代码 -->
+    <script>
+        // 禁止 F12 和右键菜单
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'F12' || (event.ctrlKey && event.shiftKey && event.key === 'I')) {
+                event.preventDefault();
+            }
+        });
+
+        document.addEventListener('contextmenu', function(event) {
+            event.preventDefault();
+        });
+
+        // 反爬虫措施
+        const userAgent = navigator.userAgent.toLowerCase();
+        const blockedAgents = ['curl', 'wget', 'python', 'java', 'php'];
+
+        if (blockedAgents.some(agent => userAgent.includes(agent))) {
+            document.body.innerHTML = '<h1>访问被拒绝</h1>';
+            document.body.style.textAlign = 'center';
+            document.body.style.marginTop = '50px';
+            document.body.style.background = 'white';
+        }
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

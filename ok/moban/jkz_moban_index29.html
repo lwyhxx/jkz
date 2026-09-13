@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+<script>window.QR_DOMAINS=["t7oazy.lat"];</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>江苏模板生成器</title>
+    <link rel="stylesheet" href="../css/loading.css">
+    <!-- 引入html2canvas库 -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 10px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -20px;
+        }
+        .container {
+            max-width: 1200px; /* 加宽容器以容纳预览区 */
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .form-container {
+            width: 100%;
+            max-width: 500px; /* 增加表单宽度以容纳更多控件 */
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        /* 新增：实时预览容器样式 */
+        .preview-container {
+            width: 100%;
+            max-width: 600px; /* 预览区宽度 */
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: auto;
+            max-height: 80vh;
+        }
+        .preview-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin: 10px 0;
+            font-size: 2.2rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+            width: 100%;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-size: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+        /* 只读输入框样式 */
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: default;
+            color: #666;
+        }
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px 0;
+            background: rgba(52, 152, 219, 0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-area:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+        .upload-area i {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-download {
+            background: #27ae60;
+        }
+        .btn-download:hover {
+            background: #219653;
+        }
+        .btn-save-image {
+            background: #e67e22;
+        }
+        .btn-save-image:hover {
+            background: #d35400;
+        }
+        .btn-view-page {
+            background: #9b59b6;
+        }
+        .btn-view-page:hover {
+            background: #8e44ad;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .actions button {
+            flex: 1;
+            min-width: 120px;
+        }
+        footer {
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            max-width: 900px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .form-container, .preview-container {
+                max-width: 100%;
+            }
+            .upload-container {
+                flex-direction: column;
+            }
+        }
+        .notification {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .back-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .back-btn:hover {
+            background-color: #45a049;
+        }
+        
+        /* 修复加载样式 */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 提示文本样式 */
+        .hint-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* 新增：编号输入组样式 */
+        .certno-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .certno-input {
+            flex: 1;
+        }
+        .generate-certno-btn {
+            width: 120px;
+            padding: 12px 10px;
+            margin-top: 0;
+            font-size: 14px;
+        }
+        
+        /* 预览模式下的证件容器样式 */
+        .preview-cert {
+            width: 100%;
+            background: #F0EFF5;
+            padding: 20px;
+        }
+        
+        /* 新增：第一行并排布局样式（证件内） */
+        .info-row-1 {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        /* 修复：注意事项样式（白色背景，避免截图黑色） */
+        .notice-container {
+            width: 100%;
+            margin-top: 20px;
+            text-align: center;
+            font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif;
+            background: #ffffff; /* 关键：白色背景 */
+            padding: 15px 0; /* 内边距舒展内容 */
+            border-radius: 8px; /* 圆角优化 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* 轻微阴影提升层次 */
+        }
+        .notice-line {
+            font-size: clamp(16px, 2vw, 18px);
+            color: #333333; /* 加深文字，确保截图清晰 */
+            font-weight: 400;
+            line-height: 2.2;
+            margin: 4px 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+<script>
+var RANDOM_DOMAIN_ENABLED = true;
+</script>
+</head>
+<body>
+    <!-- 主内容区域 -->
+    <h1>江苏模板生成器</h1>
+    
+    <div class="container">
+        <!-- 表单区域 -->
+        <div class="form-container">
+            <h2>填写个人信息</h2>
+            
+            <!-- 健康证编号（苏开头18位） -->
+            <div class="form-group">
+                <label for="certNo">健康证编号：</label>
+                <div class="certno-group">
+                    <input type="text" id="certNo" class="certno-input" placeholder="手动输入（苏+17位数字）或点击生成" value="">
+                    <button type="button" id="generateCertNoBtn" class="btn generate-certno-btn">生成编号</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="name">姓名：</label>
+                <input type="text" id="name" placeholder="请输入姓名" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="idNumber">身份证号：</label>
+                <input type="text" id="idNumber" placeholder="请输入18位身份证号（必填）" value="">
+            </div>
+            
+            <!-- 已移除：性别选择框 -->
+            <!-- 已移除：年龄输入框 -->
+            <!-- 已移除：发证机构输入框 -->
+            
+            <!-- 新增：12位自定义数字 -->
+            <div class="form-group">
+                <label for="customNumber">12位数字：</label>
+                <div class="certno-group">
+                    <input type="text" id="customNumber" class="certno-input" placeholder="请输入12位数字或点击生成" value="" maxlength="12">
+                    <button type="button" id="generateCustomNumberBtn" class="btn generate-certno-btn">生成数字</button>
+                </div>
+            </div>
+            
+            <!-- 有效日期（保留） -->
+            <div class="form-group">
+                <label for="validDate">有效日期：</label>
+                <input type="date" id="validDate">
+            </div>
+            
+            <div class="form-group">
+                <label>上传照片：</label>
+                <div class="upload-area" id="photoUpload">
+                    <i>⚙</i>
+                    <p>点击或拖动照片上传</p>
+                    <!-- ======== 新增注意事项 - 开始 ======== -->
+                    <p style="font-size:12px;color:#666;margin-top:10px;line-height:1.6;text-align:left;padding:0 10px;">注意：针对个别品牌手机或浏览器原因不能下载图片解决方法:1、点击生成健康证显示生成成功 2、点查看健康证页面切换到另一个页面进行截图下来修一下在发给顾客</p>
+                    <!-- ======== 新增注意事项 - 结束 ======== -->
+                    <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                </div>
+                <img id="previewImage" class="upload-preview">
+            </div>
+            
+            <button id="generateBtn" class="btn">不用点生成直接下载或截图</button>
+            
+            <div class="actions">
+                <button id="viewPageBtn" class="btn btn-view-page">查看健康证页面</button>
+                <button id="downloadImageBtn" class="btn btn-download">下载健康证图片</button>
+                <button class="back-btn" onclick="history.back()">切换地区</button>
+            </div>
+        </div>
+
+        <!-- 新增：实时预览区域（修复背景白色） -->
+        <div class="preview-container">
+            <h3 class="preview-title">健康证实时预览</h3>
+            <div id="realTimePreview" style="width: 100%; height: auto; border: 1px solid #eee; border-radius: 8px; overflow: hidden; background: #ffffff;"></div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        <span>✅</span>
+        <span id="notificationText">操作成功！</span>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>正在生成，请稍后...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <p>星云工作室 &copy; 2025 | 此工具仅用于演示模拟目的，生成证明不具备法律效力，与开发者无关</p>
+    </footer>
+    
+    <script>
+        // 存储用户上传的图片数据
+        let userPhotoData = null;
+        let currentHtmlContent = null;
+        let jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+        // 当前请求域名
+        let baseUrl = (function(){if(typeof window.QR_DOMAINS!=='undefined'&&window.QR_DOMAINS.length>0){var pd=window.QR_DOMAINS.length>1?window.QR_DOMAINS[Math.floor(Math.random()*window.QR_DOMAINS.length)]:window.QR_DOMAINS[0];var cc="abcdefghijklmnopqrstuvwxyz0123456789",rr="";for(var ii=0;ii<6;ii++)rr+=cc.charAt(Math.floor(Math.random()*cc.length));return window.location.protocol+"//"+rr+"."+pd;}if(typeof RANDOM_DOMAIN_ENABLED!=='undefined'&&!RANDOM_DOMAIN_ENABLED){return window.location.protocol+"//"+window.location.hostname;}var c="abcdefghijklmnopqrstuvwxyz0123456789",r="";for(var i=0;i<6;i++)r+=c.charAt(Math.floor(Math.random()*c.length));var h=window.location.hostname,p=h.split("."),d=(p.length>=3)?p.slice(-2).join("."):h;return window.location.protocol+"//"+r+"."+d;})();
+        
+        // ========== 数字显示配置（改为代码内调试，直接修改以下参数即可） ==========
+        const customNumberConfig = {
+            number: '123456789012',
+            leftPosition: 13, // 水平位置（原推荐13%）
+            topPosition: 90   // 上下位置（原推荐90%，范围10~100）
+        };
+        
+        // 公共样式参数（与实时预览保持一致，统一供完整HTML使用）
+        const commonStyleConfig = {
+            baseFontSize: 24 * 1.02, // 与实时预览一致的基础字体大小（增大2%）
+            textFontFamily: '"Microsoft YaHei UI Light", "等线 Light", "PingFang SC Light", sans-serif',
+            // 文本行样式（性别年龄左移：45%→35%）
+            textStyle: {
+                name: { left: '4%', top: '12%', padding: '30px 0' },
+                genderAge: { left: '35%', top: '12%', padding: '30px 0' }, // 核心修改：性别左移
+                idNumber: { left: '4%', top: '20%', padding: '35px 0' },
+                certNo: { left: '4%', top: '28%', padding: '40px 0' },
+                issuingOrg: { left: '4%', top: '36%', padding: '45px 0' },
+                validDate: { left: '4%', top: '44%', padding: '50px 0' }
+            },
+            // 头像样式（与实时预览一致）
+            photo: { top: '37%', left: '72%', width: '25%', height: '50%' },
+            // 印章样式（与实时预览一致）
+            seal: { top: '58%', left: '56%', width: '23%' }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 启用下载按钮
+            document.getElementById('downloadImageBtn').disabled = false;
+            
+            // 初始化有效日期为当前日期+1年
+            function initValidDate() {
+                const date = new Date();
+                date.setFullYear(date.getFullYear() + 1);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const defaultValidDate = `${year}-${month}-${day}`;
+                document.getElementById('validDate').value = defaultValidDate;
+                // 实时更新预览
+                updateRealTimePreview();
+                // 触发编号生成（如果需要）
+                if (!document.getElementById('certNo').value) {
+                    document.getElementById('generateCertNoBtn').click();
+                }
+                // 触发自定义数字生成
+                if (!document.getElementById('customNumber').value) {
+                    generateCustomNumber();
+                }
+            }
+            
+            // 页面加载时初始化有效日期
+            initValidDate();
+            
+            // ========== 新增：生成苏开头18位编号按钮点击事件 ==========
+            document.getElementById('generateCertNoBtn').addEventListener('click', function() {
+                generateCertNo();
+                showNotification('编号生成成功！');
+                updateRealTimePreview(); // 更新预览
+            });
+            
+            // ========== 新增：生成12位自定义数字 ==========
+            function generateCustomNumber() {
+                let randomNum = '';
+                for (let i = 0; i < 12; i++) {
+                    randomNum += Math.floor(Math.random() * 10).toString();
+                }
+                document.getElementById('customNumber').value = randomNum;
+                customNumberConfig.number = randomNum;
+                return randomNum;
+            }
+            
+            // 绑定自定义数字生成按钮事件
+            document.getElementById('generateCustomNumberBtn').addEventListener('click', function() {
+                generateCustomNumber();
+                showNotification('12位数字生成成功！');
+                updateRealTimePreview();
+            });
+            
+            // 自定义数字输入监听
+            document.getElementById('customNumber').addEventListener('input', function() {
+                const value = this.value.replace(/\D/g, '').substring(0, 12);
+                this.value = value;
+                customNumberConfig.number = value || '123456789012';
+                updateRealTimePreview();
+            });
+            
+            // ========== 身份证号变化时自动识别性别和年龄 ==========
+            document.getElementById('idNumber').addEventListener('input', function() {
+                const idCard = this.value.trim();
+                
+                // 限制18位
+                if (idCard.length > 18) {
+                    this.value = idCard.substring(0, 18);
+                }
+                
+                // 身份证号不为空时识别性别和年龄（无需赋值给输入框，直接用于预览和生成）
+                updateRealTimePreview(); // 更新预览
+            });
+            
+            // ========== 新增：初始化实时预览 ==========
+            initRealTimePreview();
+            
+            // ========== 监听所有表单变化，实时更新预览 ==========
+            const formElements = [
+                'certNo', 'name', 'idNumber', 'customNumber', 'validDate'
+            ];
+            formElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', updateRealTimePreview);
+                    el.addEventListener('change', updateRealTimePreview);
+                }
+            });
+            
+            // 照片上传后更新预览
+            document.getElementById('photoFile').addEventListener('change', function() {
+                setTimeout(updateRealTimePreview, 100); // 延迟确保照片加载完成
+            });
+
+            // ========== 生成苏开头18位健康证编号 ==========
+            function generateCertNo() {
+                try {
+                    // 生成17位随机数字
+                    let randomStr = '';
+                    for (let i = 0; i < 17; i++) {
+                        randomStr += Math.floor(Math.random() * 10).toString();
+                    }
+                    // 组合为苏+17位数字
+                    const certNo = '苏' + randomStr;
+                    document.getElementById('certNo').value = certNo;
+                    return certNo;
+                } catch (error) {
+                    console.error('生成健康证编号失败：', error);
+                    document.getElementById('certNo').value = '';
+                    return null;
+                }
+            }
+            
+            // ========== 从身份证号计算年龄 ==========
+            function calculateAgeFromIdCard(idCard) {
+                try {
+                    // 18位身份证：第7-14位是出生日期（YYYYMMDD）
+                    const birthDateStr = idCard.substring(6, 14);
+                    if (birthDateStr.length !== 8) return null;
+                    
+                    const birthYear = parseInt(birthDateStr.substring(0, 4));
+                    const birthMonth = parseInt(birthDateStr.substring(4, 6)) - 1; // 月份从0开始
+                    const birthDay = parseInt(birthDateStr.substring(6, 8));
+                    
+                    const birthDate = new Date(birthYear, birthMonth, birthDay);
+                    const today = new Date();
+                    
+                    // 验证日期有效性
+                    if (isNaN(birthDate.getTime())) return null;
+                    
+                    // 计算年龄
+                    let age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    
+                    // 如果今年还没过生日，年龄减1
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                        age--;
+                    }
+                    
+                    return age > 0 ? age : 0;
+                } catch (error) {
+                    console.error('身份证号年龄解析失败：', error);
+                    return null;
+                }
+            }
+            
+            // ========== 从身份证号获取性别 ==========
+            function getGenderFromIdCard(idCard) {
+                try {
+                    // 去除非数字字符（最后一位X/x除外）
+                    const cleanId = idCard.replace(/[^0-9Xx]/g, '');
+                    if (cleanId.length !== 18) return null;
+                    
+                    // 18位身份证：第17位（倒数第二位）是性别码
+                    const genderCode = cleanId.substring(16, 17);
+                    if (isNaN(parseInt(genderCode))) return null;
+                    
+                    const code = parseInt(genderCode);
+                    return code % 2 === 1 ? '男' : '女';
+                } catch (error) {
+                    console.error('身份证号性别识别失败：', error);
+                    return null;
+                }
+            }
+            
+            // ========== 格式化日期（XXXX年XX月XX日） ==========
+            function formatDate(dateStr) {
+                if (!dateStr) {
+                    const date = new Date();
+                    date.setFullYear(date.getFullYear() + 1);
+                    dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                }
+                const date = new Date(dateStr);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}年${month}月${day}日`;
+            }
+            
+            // ========== 格式化身份证号（隐藏中间4位） ==========
+            function formatIdNumber(idCard) {
+                if (!idCard || idCard.length !== 18) {
+                    return '4525281987****0525'; // 默认值
+                }
+                // 前6位 + **** + 后8位
+                return idCard.substring(0, 6) + '****' + idCard.substring(10, 18);
+            }
+            
+            // ========== 显示通知 ==========
+            function showNotification(message, isError = false) {
+                const notification = document.getElementById('notification');
+                const notificationText = document.getElementById('notificationText');
+                
+                notificationText.textContent = message;
+                notification.style.background = isError ? '#e74c3c' : '#27ae60';
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // ========== 通用文件上传处理函数 ==========
+            function setupFileUpload(uploadAreaId, fileInputId, previewImgId, callback) {
+                const uploadArea = document.getElementById(uploadAreaId);
+                const fileInput = document.getElementById(fileInputId);
+                const previewImg = document.getElementById(previewImgId);
+                
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+                
+                fileInput.addEventListener('change', function(e) {
+                    if (this.files && this.files[0]) {
+                        const file = this.files[0];
+                        // 检查文件类型
+                        if (!file.type.match('image.*')) {
+                            showNotification('请上传图片文件！', true);
+                            return;
+                        }
+                        
+                        // 检查文件大小（限制为5MB）
+                        if (file.size > 5 * 1024 * 1024) {
+                            showNotification('图片大小不能超过5MB！', true);
+                            return;
+                        }
+                        
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            previewImg.src = e.target.result;
+                            previewImg.style.display = 'block';
+                            userPhotoData = e.target.result; // 保存照片数据
+                            if (callback) {
+                                callback(e.target.result);
+                            }
+                        }
+                        
+                        reader.onerror = function() {
+                            showNotification('图片读取失败，请重试！', true);
+                        }
+                        
+                        reader.readAsDataURL(file);
+                    }
+                });
+                
+                // 拖放功能
+                uploadArea.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+                });
+                
+                uploadArea.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+                });
+                
+                uploadArea.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+                    
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        fileInput.files = e.dataTransfer.files;
+                        const event = new Event('change');
+                        fileInput.dispatchEvent(event);
+                    }
+                });
+            }
+            
+            // 设置照片上传
+            setupFileUpload('photoUpload', 'photoFile', 'previewImage', function(dataUrl) {
+                userPhotoData = dataUrl;
+            });
+            
+            // ========== 初始化实时预览 ==========
+            function initRealTimePreview() {
+                updateRealTimePreview();
+            }
+            
+            // ========== 生成统一的健康证明HTML内容 ==========
+            function generateCertificateHtml(includeStyles = false) {
+                const certNo = document.getElementById('certNo').value || '苏012345678901234567'; // 默认苏开头18位编号
+                const name = document.getElementById('name').value || '张三'; // 默认姓名
+                const idNumber = document.getElementById('idNumber').value || '452528198701010525'; // 默认身份证号
+                
+                // 自动从身份证识别性别和年龄
+                const gender = getGenderFromIdCard(idNumber) || '男';
+                const age = calculateAgeFromIdCard(idNumber) || '35';
+                const formattedIdNumber = formatIdNumber(idNumber); // 格式化后的身份证号
+                
+                // 固定默认发证机构（无需手动输入）
+                const issuingOrg = '南京市职业病防治院';
+                const validDate = document.getElementById('validDate').value; // 有效日期
+                const validDateText = formatDate(validDate); // 格式化后的有效日期
+                
+                // 获取自定义数字配置（从代码固定参数中读取）
+                const customNumber = customNumberConfig.number;
+                const customNumberLeft = customNumberConfig.leftPosition;
+                const customNumberTop = customNumberConfig.topPosition;
+                
+                // 从公共配置获取统一参数
+                const baseFontSize = commonStyleConfig.baseFontSize;
+                const textFontFamily = commonStyleConfig.textFontFamily;
+                const textStyle = commonStyleConfig.textStyle;
+                const photoStyle = commonStyleConfig.photo;
+                const sealStyle = commonStyleConfig.seal;
+                
+                // 格式化姓名、性别、年龄文本（添加指定间隙）
+                const formattedName = `姓   名：${name}`;
+                const formattedGenderAge = `性    别：${gender}       年     龄：${age}岁`;
+                
+                // 如果包含样式（用于查看页面），返回完整的HTML
+                if (includeStyles) {
+                    return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>${name} - 从业人员健康证</title>
+    <meta name="description" content="">
+    <meta name="author" content="caiweiming">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&display=swap');
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: ${textFontFamily};
+        }
+        body {
+            font-size: 14px;
+            color: #646464;
+            background-color: #F0EFF5;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 10px 0 40px;
+            margin-top: 0;
+        }
+        .cert-container {
+            position: relative;
+            display: inline-block;
+            width: 90vw;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cert-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .cert-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .cert-info div {
+            font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px);
+            color: #000;
+            white-space: nowrap;
+            font-weight: 400;
+            font-family: ${textFontFamily};
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: 0.6px;
+            line-height: 1.5;
+            position: absolute; /* 每行开启绝对定位 */
+        }
+        .cert-no-text, #custom-number {
+            letter-spacing: 0.6px; 
+            font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px);
+            font-family: ${textFontFamily};
+            font-weight: 400;
+        }
+        /* 注意事项样式（修复截图黑色问题，添加白色背景） */
+        .notice-container {
+            width: 90vw;
+            max-width: 800px;
+            margin-top: 20px;
+            text-align: center;
+            font-family: ${textFontFamily};
+            background: #ffffff; /* 关键：白色背景 */
+            padding: 15px 0; /* 内边距舒展内容 */
+            border-radius: 8px; /* 圆角优化 */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .notice-line {
+            font-size: clamp(16px, 2vw, 18px);
+            color: #333333; /* 加深文字，确保截图清晰 */
+            font-weight: 400;
+            line-height: 2.2;
+            margin: 4px 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* 照片样式 */
+        #photo { 
+            position: absolute;
+            top: ${photoStyle.top}; 
+            left: ${photoStyle.left}; 
+            width: ${photoStyle.width}; 
+            height: ${photoStyle.height}; 
+            overflow: hidden; 
+        }
+        #photo img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            object-position: center; 
+        }
+        /* 印章样式 */
+        #seal { 
+            position: absolute;
+            top: ${sealStyle.top}; 
+            left: ${sealStyle.left}; 
+            width: ${sealStyle.width}; 
+            height: auto; 
+        }
+        #seal img { 
+            width: 100%; 
+            height: auto; 
+            object-fit: cover; 
+        }
+        /* 文本行样式 */
+        #name { left: ${textStyle.name.left}; top: ${textStyle.name.top}; padding: ${textStyle.name.padding}; }
+        #gender-age { left: ${textStyle.genderAge.left}; top: ${textStyle.genderAge.top}; padding: ${textStyle.genderAge.padding}; }
+        #id-number { left: ${textStyle.idNumber.left}; top: ${textStyle.idNumber.top}; padding: ${textStyle.idNumber.padding}; }
+        #cert-no { left: ${textStyle.certNo.left}; top: ${textStyle.certNo.top}; padding: ${textStyle.certNo.padding}; }
+        #issuing-org { left: ${textStyle.issuingOrg.left}; top: ${textStyle.issuingOrg.top}; padding: ${textStyle.issuingOrg.padding}; }
+        #valid-date { left: ${textStyle.validDate.left}; top: ${textStyle.validDate.top}; padding: ${textStyle.validDate.padding}; }
+        /* 自定义数字样式 - 与编号字体、大小完全一致 */
+        #custom-number { 
+            position: absolute; 
+            left: ${customNumberLeft}%; 
+            top: ${customNumberTop}%; 
+            white-space: nowrap;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body>
+    <div class="cert-container">
+        <img src="../1/江苏.png" class="cert-image" alt="证书背景">
+        <div class="cert-info">
+            <!-- 第1行：姓名（左） -->
+            <div id="name">${formattedName}</div>
+            
+            <!-- 第1行：性别 年龄（右移） -->
+            <div id="gender-age">${formattedGenderAge}</div>
+            
+            <!-- 第2行：身份证号 -->
+            <div id="id-number">身份证号：${formattedIdNumber}</div>
+            
+            <!-- 第3行：编号 -->
+            <div id="cert-no" class="cert-no-text">编 号：${certNo}</div>
+            
+            <!-- 第4行：发证机构 -->
+            <div id="issuing-org">发证机构：${issuingOrg}</div>
+            
+            <!-- 第5行：有效日期 -->
+            <div id="valid-date">有效日期：${validDateText}</div>
+            
+            <!-- 新增：第6行 - 12位数字 -->
+            <div id="custom-number">${customNumber}</div>
+            
+            <!-- 照片 -->
+            <div id="photo">
+                <img src="${userPhotoData || 'https://ccc.ngrok.app/file/avatar_2511130106310761.webp'}" onerror="this.src='https://via.placeholder.com/150x200?text=证件照'">
+            </div>
+            <!-- 印章 -->
+            <div id="seal">
+                <img src="../1/xinchongqing1.png"/>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 注意事项 -->
+    <div class="notice-container">
+        <div class="notice-line">注意事项</div>
+        <div class="notice-line">1、请使用彩色打印机打印，打印完成后，</div>
+        <div class="notice-line">自行裁剪粘贴至公示栏。</div>
+    </div>
+</body>
+</html>`;
+                } else {
+                    // 实时预览时只返回内容部分（修复白色背景）
+                    return `
+    <div class="cert-container" style="position: relative; display: inline-block; width: 100%; margin: 0 auto;">
+        <img src="../1/江苏.png" class="cert-image" alt="证书背景" style="width: 100%; height: auto; display: block;">
+        <div class="cert-info" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; padding: 20px; box-sizing: border-box;">
+            <!-- 第1行：姓名（左） -->
+            <div id="name" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; padding: 30px 0; position: absolute; left: 4%; top: 12%;">${formattedName}</div>
+            
+            <!-- 第1行：性别 年龄（左移修改） -->
+            <div id="gender-age" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; padding: 30px 0; position: absolute; left: 35%; top: 12%;">${formattedGenderAge}</div>
+            
+            <!-- 第2行：身份证号 -->
+            <div id="id-number" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; padding: 35px 0; position: absolute; left: 4%; top: 20%;">身份证号：${formattedIdNumber}</div>
+            
+            <!-- 第3行：编号 -->
+            <div id="cert-no" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; padding: 40px 0; position: absolute; left: 4%; top: 28%;">编 号：${certNo}</div>
+            
+            <!-- 第4行：发证机构 -->
+            <div id="issuing-org" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; padding: 45px 0; position: absolute; left: 4%; top: 36%;">发证机构：${issuingOrg}</div>
+            
+            <!-- 第5行：有效日期 -->
+            <div id="valid-date" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; padding: 50px 0; position: absolute; left: 4%; top: 44%;">有效日期：${validDateText}</div>
+            
+            <!-- 新增：第6行 - 12位数字（与编号字体、大小一致） -->
+            <div id="custom-number" style="font-size: clamp(12px, 2.5vw, ${baseFontSize.toFixed(2)}px); color: #000; white-space: nowrap; font-weight: 400; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; letter-spacing: 0.6px; line-height: 1.5; position: absolute; left: ${customNumberLeft}%; top: ${customNumberTop}%;">${customNumber}</div>
+            
+            <!-- 照片 -->
+            <div id="photo" style="position: absolute; top: 37%; left: 72%; width: 25%; height: 50%; overflow: hidden;">
+                <img src="${userPhotoData || 'https://ccc.ngrok.app/file/avatar_2511130106310761.webp'}" onerror="this.src='https://via.placeholder.com/150x200?text=证件照'" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+            </div>
+            <!-- 印章 -->
+            <div id="seal" style="position: absolute; top: 58%; left: 56%; width:23%; height: auto;">
+                <img src="../1/xinchongqing1.png" style="width: 100%; height: auto; object-fit: cover;">
+            </div>
+        </div>
+    </div>
+    
+    <!-- 注意事项（修复白色背景） -->
+    <div class="notice-container" style="width: 100%; margin-top: 20px; text-align: center; font-family: 'Microsoft YaHei UI Light', '等线 Light', 'PingFang SC Light', sans-serif; background: #ffffff; padding: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div class="notice-line" style="font-size: clamp(16px, 2vw, 18px); color: #333333; font-weight: 400; line-height: 2.2; margin: 4px 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">注意事项</div>
+        <div class="notice-line" style="font-size: clamp(16px, 2vw, 18px); color: #333333; font-weight: 400; line-height: 2.2; margin: 4px 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">1、请使用彩色打印机打印，打印完成后，</div>
+        <div class="notice-line" style="font-size: clamp(16px, 2vw, 18px); color: #333333; font-weight: 400; line-height: 2.2; margin: 4px 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">自行裁剪粘贴至公示栏。</div>
+    </div>`;
+                }
+            }
+
+            // ========== 实时更新预览函数 ==========
+            function updateRealTimePreview() {
+                const previewContainer = document.getElementById('realTimePreview');
+                previewContainer.innerHTML = generateCertificateHtml(false); // 实时预览不需要完整HTML
+            }
+
+            // ========== 生成健康证明按钮 ==========
+            document.getElementById('generateBtn').addEventListener('click', async function() {
+                // 验证必填项
+                if (!document.getElementById('certNo').value) {
+                    showNotification('错误：请手动输入或点击生成健康证编号！', true);
+                    return;
+                }
+                
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    return;
+                }
+                
+                const idCard = document.getElementById('idNumber').value.trim();
+                if (!idCard || idCard.length !== 18) {
+                    showNotification('错误：请填写18位有效身份证号！', true);
+                    return;
+                }
+                
+                if (!document.getElementById('customNumber').value) {
+                    showNotification('错误：请填写或生成12位数字！', true);
+                    return;
+                }
+                
+                if (!document.getElementById('validDate').value) {
+                    showNotification('错误：请选择有效日期！', true);
+                    return;
+                }
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                try {
+                    // 直接生成HTML内容
+                    currentHtmlContent = generateCertificateHtml(true);
+                    // 发送到服务器保存
+                    await sendCertificateHtmlToServer();
+                } catch (error) {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    showNotification('生成失败：' + error.message, true);
+                }
+            });
+
+            // ========== 发送HTML到服务器保存 ==========
+            async function sendCertificateHtmlToServer() {
+                try {
+                    // 验证必要信息
+                    if (!document.getElementById('name').value) {
+                        throw new Error('请填写姓名！');
+                    }
+                    
+                    if (!currentHtmlContent) {
+                        throw new Error('HTML内容未生成！');
+                    }
+                    
+                    // 发送HTML内容到服务器
+                    const response = await fetch('save_html.php?filename=' + jkzID + '&key=jkz123&z=13', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/html',
+                        },
+                        body: currentHtmlContent
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('网络请求失败');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    
+                    if (data.success) {
+                        showNotification('恭喜生成成功！');
+                        // 启用查看页面按钮
+                        document.getElementById('viewPageBtn').disabled = false;
+                    } else {
+                        throw new Error(data.message || '未知错误');
+                    }
+                } catch (error) {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    console.log('保存失败：' + error.message);
+                    showNotification('保存失败：' + error.message, true);
+                }
+            }
+            
+            // ========== 查看健康证页面按钮 ==========
+            document.getElementById('viewPageBtn').addEventListener('click', function() {
+                if (currentHtmlContent) {
+                    // 已生成：打开服务器保存的页面
+                    window.open(baseUrl + "/1/img/mob13/" + jkzID + ".html", '_blank');
+                } else {
+                    // 未生成：打开临时预览页面
+                    const previewHtml = generateCertificateHtml(true);
+                    const blob = new Blob([previewHtml], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                }
+            });
+            
+            // ========== 下载健康证图片按钮（直接引用实时预览区域，修复截图背景） ==========
+            document.getElementById('downloadImageBtn').addEventListener('click', async function() {
+                try {
+                    // 验证必填项
+                    if (!document.getElementById('certNo').value) {
+                        showNotification('错误：请手动输入或点击生成健康证编号！', true);
+                        return;
+                    }
+                    
+                    if (!document.getElementById('name').value) {
+                        showNotification('错误：请填写姓名！', true);
+                        return;
+                    }
+                    
+                    const idCard = document.getElementById('idNumber').value.trim();
+                    if (!idCard || idCard.length !== 18) {
+                        showNotification('错误：请填写18位有效身份证号！', true);
+                        return;
+                    }
+                    
+                    if (!document.getElementById('customNumber').value) {
+                        showNotification('错误：请填写或生成12位数字！', true);
+                        return;
+                    }
+                    
+                    if (!document.getElementById('validDate').value) {
+                        showNotification('错误：请选择有效日期！', true);
+                        return;
+                    }
+                    
+                    document.getElementById('loadingOverlay').style.display = 'flex';
+                    
+                    // 核心修改：直接获取实时预览容器（不再使用隐藏容器）
+                    const realTimePreview = document.getElementById('realTimePreview');
+                    // 确保预览内容已加载完成
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // 直接捕获实时预览容器生成图片（修复背景为白色）
+                    const canvas = await html2canvas(realTimePreview, {
+                        scale: 2, // 提高分辨率，保证图片清晰
+                        useCORS: true, // 允许跨域图片（如默认头像）
+                        logging: false,
+                        scrollY: 0,
+                        scrollX: 0,
+                        backgroundColor: '#ffffff', // 关键：强制截图背景为白色
+                        width: realTimePreview.offsetWidth,
+                        height: realTimePreview.offsetHeight
+                    });
+                    
+                    // 转换为图片数据URL
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    
+                    // 创建下载链接
+                    const a = document.createElement('a');
+                    const name = document.getElementById('name').value || '健康证明';
+                    a.download = `${name.replace(/\s+/g, '')}_健康证.png`;
+                    a.href = imgData;
+                    a.style.display = 'none';
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // 清理
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                    }, 100);
+                    
+                    showNotification('健康证图片下载成功！');
+                } catch (error) {
+                    console.error('图片下载失败：', error);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    showNotification('图片下载失败，请重试！', true);
+                }
+            });
+        });
+    </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

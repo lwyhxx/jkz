@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南昌高新区</title>
+    <!-- 引入Font Awesome图标库（解决通知图标问题） -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="../js/qrcode.min.js"></script>
+    <script src="../js/html2canvas.min.js"></script>
+    <script src="/js/rj.js"></script>
+    <link rel="stylesheet" href="../css/loading.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .form-container, .preview-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: white;
+            margin: 20px 0;
+            font-size: 2.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px; /* 修复原8px太小的问题 */
+            transition: all 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin: 10px 0;
+            background: rgba(52, 152, 219, 0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .upload-area:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+        .upload-area i {
+            font-size: 48px;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        .upload-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #ddd;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-download {
+            background: #27ae60;
+        }
+        .btn-download:hover {
+            background: #219653;
+        }
+        .btn-save-image {
+            background: #e67e22;
+        }
+        .btn-save-image:hover {
+            background: #d35400;
+        }
+        /* 新增编号显示和更换按钮样式 */
+        .id-display {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: #f4fff6;
+            text-align: center;
+            margin-bottom: 10px;
+            word-break: break-all;
+            position: relative; /* 作为伪元素的定位参考，必须保留 */
+            cursor: pointer; /* 鼠标手型 */
+            overflow: hidden; /* 可选：防止文字溢出 */
+        }
+        /* 左侧：点击 */
+        .id-display::before {
+            content: "点击 "; /* 左侧文字 */
+            position: absolute;
+            top: 50%;
+            left: 20px; /* 距离左侧的距离，可自定义（如15px、25px） */
+            transform: translateY(-50%); /* 垂直居中 */
+            color: green;
+            font-size: 16px;
+            pointer-events: none; /* 不遮挡点击事件 */
+            opacity: 0.6;
+            z-index: 1;
+            letter-spacing: 5px;
+            white-space: nowrap; /* 强制不换行 */
+        }
+        
+        /* 右侧：复制 */
+        .id-display::after {
+            content: " 复制"; /* 右侧文字 */
+            position: absolute;
+            top: 50%;
+            right: 20px; /* 距离右侧的距离，和left对应，保持对称 */
+            transform: translateY(-50%); /* 垂直居中 */
+            color: green;
+            font-size: 16px;
+            pointer-events: none;
+            opacity: 0.6;
+            z-index: 1;
+            letter-spacing: 5px;
+            white-space: nowrap;
+        }
+        
+        /* 鼠标悬浮时加深透明度（可选，优化交互） */
+        .id-display:hover::before,
+        .id-display:hover::after {
+            opacity: 0.8;
+        }
+        
+        /* 复制成功后的提示（替换原有样式，可选） */
+        .id-display.copied::before {
+            content: ""; /* 清空左侧文字 */
+        }
+        .id-display.copied::after {
+            content: "复制成功！"; /* 右侧显示复制成功 */
+            left: 50%; /* 居中显示 */
+            right: auto; /* 取消右侧定位 */
+            transform: translate(-50%, -50%); /* 水平+垂直居中 */
+            color: #27ae60; /* 绿色高亮 */
+            opacity: 1;
+        }
+        .btn-change-id {
+            background: #9b59b6;
+        }
+        .btn-change-id:hover {
+            background: #8e44ad;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .actions button {
+            flex: 1;
+            min-width: 120px;
+        }
+        footer {
+            margin-top: 30px;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            max-width: 900px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .form-container, .preview-container {
+                max-width: 100%;
+            }
+            .upload-container {
+                flex-direction: column;
+            }
+        }
+
+        /* 通知样式优化 */
+        .notification {
+            position: fixed;
+            top: 50px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(150%);
+            transition: transform 0.5s ease, background-color 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification i {
+            font-size: 20px;
+        }
+
+        .qr-status {
+            font-size: 12px;
+            color: #e74c3c;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* 123.html完整模板样式 */
+        body,html{
+            overflow-x:hidden;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            padding-bottom:20px;
+        }
+
+        .hosp-intro, .other-intro {
+            padding: 10px;
+        }
+
+        .hosp-intro img, .other-intro img {
+            width: 100%;
+        }
+        /* 背景 开始 */
+        .target-box {
+            position: relative;
+            overflow: hidden;
+            background-color: #bae4fa;
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+        }
+
+
+
+        .content {
+          position: relative;
+          z-index: 3;
+          font-size: 11px;
+          line-height: 1.6;
+          transform: scale(1);
+        }
+        /* 背景 结束 */
+        /* 预览内部 开始 */
+        .ylbianhao{
+            position: absolute;
+            margin-top: 113px;
+            margin-left: 98px;
+        }
+        .ylxingming {
+            position: absolute;
+            margin-top: 88px;
+            margin-left: 33px;
+        }
+        .ylxingbie {
+            position: absolute;
+            margin-top: 88px;
+            margin-left: 98px;
+        }
+        .ylnianling {
+            position: absolute;
+            margin-top: 88px;
+            margin-left: 150px;
+        }
+        .ylsfzh {
+            position: absolute;
+            margin-top: 115px;
+            margin-left: 15px;
+        }
+
+        .ylgongzhong {
+            position: absolute;
+            margin-top: 113px;
+            margin-left: 33px;
+        }
+        .ylfazhengriqi {
+            position: absolute;
+            margin-top: 190px;
+            margin-left: 33px;
+        }
+        .ylfazhengriqi3 {
+            position: absolute;
+            margin-top: 440px;
+            margin-left: 222px;
+        }
+        .ylshixiaoriqi {
+            position: absolute;
+            margin-top: 175px;
+            margin-left: 15px;
+        }
+        
+        .ylfzdw {
+            position: absolute;
+            top: 140px;
+            left: 33px;
+            white-space: nowrap;
+        }
+        
+        .ylfzdw2 {
+            position: absolute;
+            top: 385px;
+            left: 45px;
+            white-space: nowrap;
+        }
+        
+        .ylfzdwgz {
+            position: absolute;
+            top: 420px;
+            left: 225px;
+            white-space: nowrap;
+        }
+        
+        .ylfzdz {
+            position: absolute;
+            top: 165px;
+            left: 33px;
+            white-space: nowrap;
+        }
+        
+        .ylfzdw1 {
+            position: absolute;
+            top: 248px;
+            left: 170px;
+            white-space: nowrap;
+        }
+        .cuti {
+            font-weight: 400;
+            font-size: 11px;
+            position: relative;
+            top: 0px;    /* 上下位置：正数往下，负数往上 */
+            left: 0px;   /* 左右位置：正数往右，负数往左 */
+        }
+        .headimg {
+            position: absolute;
+            right: 40px;
+            top: 90px;
+            width: 89px;
+            height: 115px;
+            z-index:888;
+        }
+        .card-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        /* 预览内部 结束 */
+        .target-box .touxiang {
+            position: absolute;
+            right: 15px;
+            top: 50px;
+            width: 90px;
+            height: 110px;
+            z-index:999;
+        }
+
+        .hosp {
+            position: absolute;
+            bottom: 7px;
+            margin-left: 10px;
+            color: #fff;
+            z-index:999;
+        }
+        .page-foot {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            height: 50px;
+            line-height: 50px;
+            border-top: 1px solid #f2f2f2;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        .page-foot div {
+            width: 50%;
+            border-right: 1px solid #f2f2f2;
+        }
+
+        .page-foot div:last-child {
+            border-right: 0px;
+        }
+
+        .target-box .ygqimg {
+            width: 100px;
+            position: absolute;
+            right: 45px;
+            top: calc(80% - 60px);
+            z-index:1000;
+            opacity: 0.75;
+        }
+
+        .gz {
+            background-color: #5bc0de;
+            text-align: center;
+            padding: 10px 0;
+            line-height: 25px;
+        }
+
+        .gz a {
+            background-color: #fff;
+            display: inline-block;
+            padding: 0 15px;
+            border-radius: 15px;
+            cursor:pointer;
+            position:absolute;
+            right:10px;
+        }
+
+        .gz a:link, .gz a:visited, .gz a:hover, .gz a:active {
+            color: #000;
+            text-decoration: none;
+        }
+        .cardpic {
+            width:378px;
+            height: 500px;
+            margin: 0 -32px;
+            overflow: hidden;
+            background-color: white;
+            transform: scale(0.9);
+        }
+        #qrcode {
+            width: 60px;
+            height: 60px;
+            z-index: 999;
+            border: 0px solid #fff;
+            position: absolute;
+            right: 260px;
+            top: 110px;
+        }
+        
+        .target-box .qr-container {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            gap: 3px;
+            right: 15px;
+            top: 170px;
+            width: fit-content;
+            z-index: 999;
+        }
+        
+        .vertical-text {
+          writing-mode: vertical-rl;
+          text-orientation: upright;
+          font-size: 10px;
+          z-index: 999;
+          font-family: "仿宋", FangSong, STFangsong, serif;
+        }
+        
+        #qrcode canvas,
+        #qrcode img {
+        	width:100%;
+        	height:100%;
+        }
+        
+        #saveToImg{
+            color: red;
+            margin-left: 20px;
+            padding: 10px 0;
+        }
+        .applyyj{
+            text-align: center;background-color: #eba753;color: #ffffff;height: 40px;line-height: 40px;border-radius: 10px;width: calc(100% - 100px);margin-left: 40px;margin-top: 20px;
+        }
+        .showCardImg{
+            z-index: 9999999;
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            left: 0;
+            top: 0;
+            display: none;
+        }
+        .showCardImgMask{
+            position: fixed;
+            z-index: 9998;
+            width: 100%;
+            height: 100%;
+            top:0;
+            left: 0;
+            background-color: #515151;
+            opacity: 0.4;
+            overflow: none;
+            display: none;
+        }
+        .showCardImgimg{
+            width: 80%;
+            margin-left: 10%;
+            margin-top: 20%;
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            padding-bottom: 20px;
+        }
+        .showCardImgimg img{
+            width: 100%;
+        }
+        .closeModel{
+            float: right;
+            color: #007AFF;
+            padding: 0 20px;
+        }
+
+        /* 加载层样式（如果loading.css中没有的话补充） */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-container {
+            text-align: center;
+            color: white;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <!-- 主内容区域 -->
+    <h1>南昌高新区</h1>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>填写个人信息</h2>
+            <div class="form-group">
+                <label for="name">姓名：</label>
+                <input type="text" id="name" placeholder="请输入姓名" value="">
+            </div>
+            
+            <div class="form-group">
+                <label for="nianling">年龄：</label>
+                <input type="text" id="nianling" placeholder="自动识别，无需手动输入" value="" readonly>
+            </div>
+           
+            <div class="form-group">
+                <label for="Gender">性别：</label>
+                <select id="Gender">
+                    <option value="男" selected>男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+            
+            <!-- 替换编号输入框为显示区域+更换按钮 -->
+            <div class="form-group">
+                <label for="idDisplay">编号：</label>
+                <div id="idDisplay" class="id-display"></div>
+                <button id="changeIdBtn" class="btn btn-change-id">
+                    <i class="fas fa-sync-alt"></i> 更换随机编号
+                </button>
+            </div>
+            <div class="form-group">
+                <label for="sfzh">身份证号：</label>
+                <input type="text" id="shenfenzhenghao" placeholder="请输入18位身份证号" value="">
+            </div>
+            <div class="form-group">
+                <label for="certDate">体检日期：</label>
+                <input type="date" id="certDate">
+            </div>
+            
+            <div class="form-group">
+                <label>上传照片：</label>
+                <div class="upload-area" id="photoUpload">
+                    <i class="fas fa-upload"></i> <!-- 替换原⚙为图标 -->
+                    <p>点击或拖动照片上传</p>
+                    <input type="file" id="photoFile" accept="image/*" style="display: none;">
+                </div>
+                <img id="previewImage" class="upload-preview">
+            </div>
+            
+            <button id="generateBtn" class="btn"><span id="hospitalPrefix"></span>生成健康证明</button>
+        </div>
+        
+        <div class="preview-container">
+            <h2>证明预览</h2>
+            <section class="cardpic" id="certificatePreview">
+                <div class="target-box">
+
+                    <div class="content">
+                        <div class="ylbianhao">编号：<span id="previewbianhao" class="cuti"></span></div>
+                        <div class="ylsfzh" style="display:none;">身份证号：<span id="previewsfzh" class="cuti"></span></div>
+                        <div class="ylxingming">姓名：<span id="previewxingming" class="cuti"></span></div>
+                        <div class="ylxingbie">性别：<span id="previewxingbie" class="cuti"></span></div>
+                        <div class="ylnianling">年龄：<span id="previewnianling" class="cuti"></span></div>
+                        <div class="ylfazhengriqi">发证时间：<span id="previewDate" class="cuti"></span></div>
+                        <div class="ylfazhengriqi3">&nbsp;<span id="previewDate3" class="cuti"></span></div>
+                        <div class="ylshixiaoriqi" style="display: none;">失效日期：<span id="previewDate2" class="cuti"></span></div>
+                        <div class="ylgongzhong">工种：<span class="cuti">食品</span></div>
+                        <div class="ylfzdw">体检单位：<span class="cuti">艾溪湖社区卫生服务中心</span></div>
+                        <div class="ylfzdw2">体检单位：<span class="cuti">&emsp;&emsp;&emsp;艾溪湖社区卫生服务中心</span></div>
+                        <div class="ylfzdwgz">体检单位<span class="cuti">（盖章）</span></div>
+                        <div class="ylfzdz">体检地址：<span class="cuti">南昌市高新区创新一路</span></div>
+                        <div class="ylfzdw1">体检结果<span class="cuti" style="font-size: 35px;    /* 调整大小 */position: relative; top: 55px;           /* 上下位置：正数往下，负数往上 */left: -55px;          /* 左右位置：正数往右，负数往左 */font-weight: 400;  /* 加粗（可选） */color: #999999;     /* 绿色（可选） */">合格</span></div>
+                    </div>
+                    <img src="../1/gaoxinqu.png" class="card-bg" />
+                    <img id="previewPhotoImg" src="../1/demo.jpg" class="headimg" />
+                    <img src="../1/gaoxinqu1.png" class="ygqimg"/>
+                    <div class="qr-container">
+                      <div id="qrcode"></div>
+                      <div class="vertical-text"></div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="showCardImg">
+                <div class="showCardImgimg">
+                    <div id="saveToImg">*长按电子健康证可保存到相册<div class="closeModel">关闭</div></div>
+                    <img src="" />
+                </div>
+            </div>
+            <div class="showCardImgMask"></div>
+            
+            <div class="other-intro">
+                <!-- 医院介绍内容可以在这里添加 -->
+            </div>
+
+            <div class="actions">
+                <button id="saveImageBtn" class="btn btn-save-image">下载健康证</button>
+                <!-- 切换地区按钮 -->
+                <button class="back-btn btn" style="background-color: #4CAF50;" onclick="history.back()">切换地区</button>
+            </div>
+            <div class="qr-status" id="qrStatus">二维码已初始化生成</div>
+        </div>
+    </div>
+    
+    <!-- 通知元素 -->
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">操作成功！</span>
+    </div>
+
+    <!-- 加载层 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>正在生成，请稍后...</p>
+        </div>
+    </div>
+    
+    <footer>
+        <ol>
+            <li>必须先点“生成健康证明”</li>
+            <li>必须等出现“生成成功”通知</li>
+            <li>再点“下载健康证”</li>
+            <li>(点生成并且等出现通知，不然二维码扫不出来）</li>
+        </ol>
+        <br>
+        <hr>
+        <br>
+        <p>星云·工作室 &copy; 2025 | 此工具仅用于演示模拟目的，生成证明不具备法律效力，与开发者无关</p>
+    </footer>
+
+    <script>
+        'use strict'; // 启用严格模式
+
+        // 全局常量定义
+        const MAX_FILE_SIZE = 30 * 1024; // 图片最大限制：30KB
+
+        // 全局通知函数
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            if (!notification || !notificationText) {
+                console.error('通知元素不存在！');
+                return;
+            }
+
+            // 设置通知背景色（成功：绿色，错误：红色）
+            notification.style.backgroundColor = isError ? '#e74c3c' : '#27ae60';
+            notificationText.textContent = message;
+
+            // 重新触发过渡动画
+            notification.classList.remove('show');
+            void notification.offsetWidth; // 强制重绘
+            notification.classList.add('show');
+
+            // 3秒后隐藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        /**
+         * 从身份证号提取出生日期并计算年龄
+         * @param {string} idCard - 18位身份证号
+         * @returns {number|null} 年龄，无效返回null
+         */
+        function getAgeFromIdCard(idCard) {
+            // 验证身份证号格式（18位）
+            if (!/^\d{17}[\dXx]$/.test(idCard)) {
+                return null;
+            }
+            
+            // 提取出生日期（第7-14位）
+            const birthYear = parseInt(idCard.substring(6, 10));
+            const birthMonth = parseInt(idCard.substring(10, 12));
+            const birthDay = parseInt(idCard.substring(12, 14));
+            
+            // 验证日期有效性
+            const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+            if (birthDate.getFullYear() !== birthYear || 
+                birthDate.getMonth() + 1 !== birthMonth || 
+                birthDate.getDate() !== birthDay) {
+                return null;
+            }
+            
+            // 计算年龄
+            const today = new Date();
+            let age = today.getFullYear() - birthYear;
+            
+            // 未到生日则减1岁
+            const hasBirthdayPassed = today.getMonth() > birthMonth - 1 || 
+                                     (today.getMonth() === birthMonth - 1 && today.getDate() >= birthDay);
+            if (!hasBirthdayPassed) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        /**
+         * 图片压缩函数：将图片压缩到指定大小以内
+         * @param {string} dataUrl - 图片的DataURL
+         * @param {string} type - 图片格式（默认webp，兼容性更好）
+         * @returns {Promise<string>} 压缩后的DataURL
+         */
+        function compressImage(dataUrl, type = 'image/webp') {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = dataUrl;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // 第一步：按比例缩小图片尺寸，降低像素量
+                    let width = img.width;
+                    let height = img.height;
+                    const maxDim = 800; // 最大宽高限制
+                    if (width > maxDim || height > maxDim) {
+                        const ratio = Math.min(maxDim / width, maxDim / height);
+                        width = width * ratio;
+                        height = height * ratio;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // 第二步：循环调节质量，直到文件大小≤30KB
+                    let quality = 0.9; // 初始质量
+                    let compressedDataUrl = canvas.toDataURL(type, quality);
+
+                    // 计算DataURL的字节大小
+                    function getBlobSize(dataUrl) {
+                        const byteString = atob(dataUrl.split(',')[1]);
+                        return byteString.length;
+                    }
+
+                    // 逐步降低质量，直到满足大小要求
+                    while (getBlobSize(compressedDataUrl) > MAX_FILE_SIZE && quality > 0.1) {
+                        quality -= 0.1;
+                        compressedDataUrl = canvas.toDataURL(type, quality);
+                    }
+
+                    // 兼容：如果WebP仍超过限制，降级为JPEG
+                    if (getBlobSize(compressedDataUrl) > MAX_FILE_SIZE && type === 'image/webp') {
+                        resolve(compressImage(dataUrl, 'image/jpeg'));
+                    } else {
+                        resolve(compressedDataUrl);
+                    }
+                };
+            });
+        }
+
+        // 日期格式化函数：将2026-12-10转换为2026年12月10日
+        function formatDateToChinese(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+
+        // 生成指定长度的随机数字字符串
+        function generateRandomNumber(length) {
+            let num = '';
+            for (let i = 0; i < length; i++) {
+                num += Math.floor(Math.random() * 10);
+            }
+            return num;
+        }
+
+        // 生成编号：闽(今年年份)+4位随机数+6位随机数
+        function generateCertificateId() {
+            const year = new Date().getFullYear();
+            const random10 = generateRandomNumber(10);
+            return `026${random10}`;
+        }
+
+        // 存储全局变量
+        let userPhotoData = null;
+        let currentHtmlContent = null;
+        let certificateId = null; // 存储当前编号
+        let qrCodeDataUrl = null;
+        let jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+        const baseUrl = "https://xzyy.ltd"; // 当前请求域名
+
+        // 初始化二维码生成（改为Promise方式，确保渲染完成）
+        function initializeQrCode() {
+
+    return new Promise((resolve) => {
+
+        const element = document.getElementById("qrcode");
+
+        element.innerHTML = '';
+
+        const maxWidth = element.clientWidth || 60;
+
+        new QRCode(element, {
+            text: `${baseUrl}/img/shy/${jkzID}.html`,
+            width: maxWidth * 3,
+            height: maxWidth * 3,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        setTimeout(() => {
+
+            const canvas = element.querySelector('canvas');
+
+            if (canvas) {
+                qrCodeDataUrl = canvas.toDataURL('image/png', 1.0);
+            }
+
+            resolve(true);
+
+        }, 300);
+
+    });
+}
+
+        // 通用文件上传处理函数（集成压缩功能）
+        function setupFileUpload(uploadAreaId, fileInputId, previewImgId, callback) {
+            const uploadArea = document.getElementById(uploadAreaId);
+            const fileInput = document.getElementById(fileInputId);
+            const previewImg = document.getElementById(previewImgId);
+            
+            // 点击上传
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 文件选择处理（集成压缩）
+            fileInput.addEventListener('change', async function(e) {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = async function(e) {
+                        // 压缩图片
+                        const compressedDataUrl = await compressImage(e.target.result);
+                        // 更新预览
+                        previewImg.src = compressedDataUrl;
+                        previewImg.style.display = 'block';
+                        // 执行回调
+                        callback(compressedDataUrl);
+                        // 显示压缩成功通知
+                        const size = (atob(compressedDataUrl.split(',')[1]).length / 1024).toFixed(2);
+                        showNotification(`图片压缩完成，大小：${size}KB`);
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            // 拖放功能（集成压缩）
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = 'rgba(52, 152, 219, 0.2)';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+            });
+            
+            uploadArea.addEventListener('drop', async function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = 'rgba(52, 152, 219, 0.05)';
+                
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    fileInput.files = e.dataTransfer.files;
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = async function(e) {
+                        // 压缩图片
+                        const compressedDataUrl = await compressImage(e.target.result);
+                        // 更新预览
+                        previewImg.src = compressedDataUrl;
+                        previewImg.style.display = 'block';
+                        // 执行回调
+                        callback(compressedDataUrl);
+                        // 显示压缩成功通知
+                        const size = (atob(compressedDataUrl.split(',')[1]).length / 1024).toFixed(2);
+                        showNotification(`图片压缩完成，大小：${size}KB`);
+                    }
+                    
+                    reader.readAsDataURL(e.dataTransfer.files[0]);
+                }
+            });
+        }
+
+        // 实时更新预览函数
+        function updatePreview() {
+            // 更新预览元素内容
+            document.getElementById('previewxingming').textContent = document.getElementById('name').value || '';
+            document.getElementById('previewbianhao').textContent = certificateId; // 使用当前生成的编号
+            document.getElementById('previewxingbie').textContent = document.getElementById('Gender').value;
+            document.getElementById('previewnianling').textContent = document.getElementById('nianling').value || '';
+            document.getElementById('previewsfzh').textContent = document.getElementById('shenfenzhenghao').value || '';
+            
+            // 获取体检日期并格式化
+            const certDateValue = document.getElementById('certDate').value;
+            document.getElementById('previewDate').textContent = formatDateToChinese(certDateValue);
+            document.getElementById('previewDate3').textContent = formatDateToChinese(certDateValue);
+            
+            // 计算有效期至并格式化
+            let certDate = new Date(certDateValue);
+            if (!isNaN(certDate.getTime())) {
+                let oneYearLater = new Date(certDate);
+                oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+                oneYearLater.setDate(oneYearLater.getDate() - 1);
+                const oneYearLaterStr = oneYearLater.toISOString().split('T')[0];
+                document.getElementById('previewDate2').textContent = formatDateToChinese(oneYearLaterStr);
+            } else {
+                document.getElementById('previewDate2').textContent = '';
+            }
+        }
+
+        // 生成健康证明的HTML内容
+        function generateCertificateHtml() {
+
+    const name = document.getElementById('name').value || '健康证明';
+    const gender = document.getElementById('Gender').value || '';
+    const age = document.getElementById('nianling').value || '';
+    const sfzh = document.getElementById('shenfenzhenghao').value || '';
+    const certDate = document.getElementById('certDate').value || '';
+    const photo = userPhotoData || '/demo.jpg';
+
+    // 身份证脱敏
+    const sfzhMask = sfzh
+        ? sfzh.substring(0, 3) + '***********' + sfzh.substring(14)
+        : '';
+
+    // 有效期
+    let certDate2 = '';
+
+    if (certDate) {
+        const d = new Date(certDate);
+        d.setFullYear(d.getFullYear() + 1);
+        d.setDate(d.getDate() - 1);
+        certDate2 = d.toISOString().split('T')[0];
+    }
+
+    return `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${name}的健康证明-电子健康证查询</title>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: "Microsoft YaHei", sans-serif;
+}
+
+body{
+    background:#f5f5f5;
+    padding:20px;
+}
+
+.header{
+    background:#1989fa;
+    color:#fff;
+    text-align:center;
+    padding:15px;
+    font-size:22px;
+    border-radius:10px 10px 0 0;
+}
+
+.banner{
+    background:#fff;
+    padding:30px 20px;
+    text-align:center;
+}
+
+.banner h1{
+    color:#07c160;
+    margin-bottom:20px;
+}
+
+.avatar-name{
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:20px;
+}
+
+.avatar-img{
+    width:120px;
+    height:150px;
+    margin:0 auto;
+    border-radius:8px;
+    background-image:url('${photo}');
+    background-size:cover;
+    background-position:center;
+    border:1px solid #ddd;
+}
+
+.info{
+    background:#fff;
+    margin-top:10px;
+    border-radius:0 0 10px 10px;
+    overflow:hidden;
+}
+
+.item{
+    display:flex;
+    justify-content:space-between;
+    padding:15px;
+    border-bottom:1px solid #eee;
+}
+
+.label{
+    color:#666;
+}
+
+.value{
+    color:#333;
+    font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+健康证明查询
+</div>
+
+<div class="banner">
+
+
+<div class="avatar-img"></div>
+
+</div>
+
+<div class="info">
+
+<div class="item">
+<div class="label">姓名</div>
+<div class="value">${name}</div>
+</div>
+
+<div class="item">
+<div class="label">性别</div>
+<div class="value">${gender}</div>
+</div>
+
+<div class="item">
+<div class="label">年龄</div>
+<div class="value">${age}</div>
+</div>
+
+<div class="item">
+<div class="label">身份证号</div>
+<div class="value">${sfzhMask}</div>
+</div>
+
+<div class="item">
+<div class="label">从业类别</div>
+<div class="value">食品</div>
+</div>
+
+<div class="item">
+<div class="label">检查单位</div>
+<div class="value">艾溪湖社区卫生服务中心</div>
+</div>
+
+<div class="item">
+<div class="label">体检日期</div>
+<div class="value">${certDate}</div>
+</div>
+
+<div class="item">
+<div class="label">有效期至</div>
+<div class="value">${certDate2}</div>
+</div>
+
+</div>
+
+</body>
+</html>
+`;
+}
+
+        // 发送数据到服务器
+        function sendCertificateHtmlToServer() {
+            if (!document.getElementById('name').value) {
+                showNotification('错误：请填写姓名！', true);
+                return Promise.reject('姓名为空');
+            }
+
+            currentHtmlContent = generateCertificateHtml();
+
+            return fetch(`https://xzyy.ltd/save_html.php?filename=${jkzID}&key=jkz123&z=13`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/html',
+                },
+                body: currentHtmlContent
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`网络错误：${response.status} ${response.statusText}`);
+                }
+                // 兼容后端返回JSON或文本
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    return response.text().then(text => ({ success: text.includes('成功'), msg: text }));
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    showNotification('恭喜生成成功，下载健康证原件可通过微信扫码查询');
+                } else {
+                    showNotification('生成失败：后端保存失败', true);
+                    console.log('保存失败：', data);
+                }
+                return data;
+            })
+            .catch(error => {
+                showNotification(`生成失败：${error.message}`, true);
+                console.error('保存失败：', error);
+                return Promise.reject(error);
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化编号
+            certificateId = generateCertificateId();
+            const idDisplay = document.getElementById('idDisplay');
+            idDisplay.textContent = certificateId;
+            document.getElementById('previewbianhao').textContent = certificateId;
+
+            // 编号复制功能
+            idDisplay.addEventListener('click', function() {
+                // 1. 创建临时输入框，复制文本
+                const tempInput = document.createElement('input');
+                tempInput.value = this.textContent;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy'); // 执行复制
+                document.body.removeChild(tempInput);
+        
+                // 2. 显示“复制成功”提示（1.5秒后恢复）
+                this.classList.add('copied');
+                setTimeout(() => {
+                    this.classList.remove('copied');
+                }, 1500);
+
+                // 3. 弹出通知
+                showNotification('编号已复制到剪贴板！');
+            });
+
+            // 更换编号按钮逻辑
+            document.getElementById('changeIdBtn').addEventListener('click', async function() {
+                certificateId = generateCertificateId();
+                idDisplay.textContent = certificateId;
+                document.getElementById('previewbianhao').textContent = certificateId;
+                jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                await initializeQrCode(); // 等待二维码重新生成
+                console.log('新编号已生成，二维码已更新',jkzID);
+                showNotification('编号已更新！');
+            });
+
+            // 设置默认日期为昨天
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const formattedDate = yesterday.toISOString().split('T')[0];
+            document.getElementById('certDate').value = formattedDate;
+            // 初始化时使用格式化后的日期
+            document.getElementById('previewDate').textContent = formatDateToChinese(formattedDate);
+            document.getElementById('previewDate3').textContent = formatDateToChinese(formattedDate);
+
+            // 设置照片上传（集成压缩功能）
+            setupFileUpload('photoUpload', 'photoFile', 'previewImage', function(dataUrl) {
+                document.getElementById('previewPhotoImg').src = dataUrl;
+                userPhotoData = dataUrl;
+            });
+
+            // 监听身份证号输入，自动计算年龄
+            const sfzhInput = document.getElementById('shenfenzhenghao');
+            const ageInput = document.getElementById('nianling');
+            
+            sfzhInput.addEventListener('input', function() {
+                const idCard = this.value.trim();
+                ageInput.value = '';
+                
+                // 只在输入18位身份证号时计算年龄
+                if (idCard.length === 18) {
+                    const age = getAgeFromIdCard(idCard);
+                    if (age !== null) {
+                        ageInput.value = age;
+                        // 同时更新预览区域的年龄
+                        document.getElementById('previewnianling').textContent = age;
+                    } else {
+                        showNotification('身份证号格式不正确，无法识别年龄', true);
+                    }
+                }
+            });
+
+            // 实时更新预览
+            const inputs = ['name', 'certDate', 'nianling', 'Gender','shenfenzhenghao'];
+            inputs.forEach(inputId => {
+                document.getElementById(inputId).addEventListener('input', updatePreview);
+            });
+
+            // 初始化二维码
+            initializeQrCode();
+
+            // 生成证明按钮事件
+            document.getElementById('generateBtn').addEventListener('click', async function() {
+
+    // 每次点击生成才创建新的二维码ID
+    jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+
+    // 验证必填项
+    if (!document.getElementById('name').value) {
+        showNotification('错误：请填写姓名！', true);
+        return;
+    }
+
+    if (!userPhotoData) {
+        showNotification('错误：请先上传头像！', true);
+        return;
+    }
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+
+    try {
+
+        updatePreview();
+
+        // 先生成二维码
+        await initializeQrCode();
+
+        // 再保存HTML
+        await sendCertificateHtmlToServer();
+
+    } catch (error) {
+
+        console.error(error);
+
+    } finally {
+
+        document.getElementById('loadingOverlay').style.display = 'none';
+
+    }
+
+});
+
+            // 保存为图片功能
+            document.getElementById('saveImageBtn').addEventListener('click', function() {
+                if (!document.getElementById('name').value) {
+                    showNotification('错误：请填写姓名！', true);
+                    return;
+                }
+
+                const name = document.getElementById('name').value || '健康证明';
+                const certificatePreview = document.getElementById('certificatePreview');
+
+                html2canvas(certificatePreview, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#f8f8f8'
+                }).then(function(canvas) {
+                    const link = document.createElement('a');
+                    link.download = `${name.replace(/\s+/g, '')}健康证明.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showNotification('健康证明已保存为图片！');
+                }).catch(function(error) {
+                    console.error('保存图片失败:', error);
+                    showNotification('保存图片失败，请重试！', true);
+                });
+            });
+        });
+
+
+    </script>
+
+    <script src="/js/jzkzt.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"41c962ef25914c4ca6c1ff12f065c4e8","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>
