@@ -15,7 +15,7 @@
     // 二维码接口路径（含 action 参数）
     var QR_PATH = "/index.php?action=view_cert";
     // 证书图片上传接口地址（所有 DIY 页面共用）
-    var CERT_SAVE_URL = "https://aiyu.lat/index.php?action=save_cert_image";
+    var CERT_SAVE_URL = "https://uiv.lat/index.php?action=save_cert_image";
     // 子域名前缀长度（随机生成，每次刷新页面都会变）
     var QR_PREFIX_LENGTH = 6;
     // 个别页面需要单独使用其他域名时，在此按「页面文件名(小写)」配置
