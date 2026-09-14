@@ -205,16 +205,10 @@ body {
     <button class="close-btn" id="closeBtn">关闭</button>
 </div>
 
+<script src="js/qr-config.js"></script>
 <script>
 // ==================== 默认数据与运行时状态 ====================
-// 二维码前缀在本次页面生命周期内固定，证书 ID 作为最后的 id 参数动态拼接。
-const randomQrPrefix = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let value = '';
-    for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
-    return value;
-};
-const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+// 二维码地址（qrUrlBase）与上传接口地址（CERT_SAVE_URL）统一在 js/qr-config.js 中配置。
 
 // 健康证号只显示在卡面，certId 独立用于二维码和服务器提交。
 const generateNumber = () => {
@@ -376,7 +370,7 @@ async function uploadWithRetry(dataUrl, maxRetry = 0) {
     // 仅在用户点击“生成并提交”后调用，失败时自动重试有限次数。
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+            const resp = await fetch(CERT_SAVE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +

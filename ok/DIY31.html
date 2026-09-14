@@ -377,7 +377,7 @@ function getPngDataUrl(sourceCanvas, maxWidth = 0) {
 async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+            const resp = await fetch(CERT_SAVE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +

@@ -144,18 +144,12 @@ body { background: #f0f4f8; font-family: "PingFang SC", "Microsoft YaHei", sans-
   <img id="modalImg" style="max-width:90%;max-height:80vh;border-radius:12px;" src="" alt="预览">
 </div>
 
+<script src="js/qr-config.js"></script>
 <script>
 // 默认头像只用于首次加载，用户选择或拖拽新头像后会替换它。
 const defaultAvatarFile = "./temp/1.png";
 //diy15修改
-// 二维码使用随机子域名，证书 ID 会在 getQrUrl 中追加到请求参数。
-const randomQrPrefix = () => {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let value = '';
-  for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
-  return value;
-};
-const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+// 二维码地址（qrUrlBase）与上传接口地址（CERT_SAVE_URL）统一在 js/qr-config.js 中配置。
 
 // 表单的唯一数据源。卡面编号 number 与二维码使用的 certId 相互独立。
 // 编号格式：JK + 当前日期（YYYYMMDD）+ 6 位随机数字。
@@ -275,7 +269,7 @@ async function uploadWithTimeout(dataUrl, timeoutMs = 30000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+    const resp = await fetch(CERT_SAVE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'cert_id=' + encodeURIComponent(formState.certId) +

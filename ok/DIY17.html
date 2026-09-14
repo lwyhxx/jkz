@@ -108,20 +108,13 @@ body{background:#f0f4f8;padding:20px;font-family:-apple-system,BlinkMacSystemFon
 </div>
 <div id="toast" class="toast"></div>
 <canvas id="qrcodeCanvas" style="display:none"></canvas>
+<script src="js/qr-config.js"></script>
 
 <script>
 // ==================== 页面默认数据与表单状态 ====================
 // 默认头像和二维码地址只提供基础路径，随机子域名和证书 ID 在运行时拼接。
 const defaultAvatarFile = "./temp/1.png";
-const randomQrPrefix = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let prefix = "";
-    for (let i = 0; i < 6; i++) {
-        prefix += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return prefix;
-};
-const qrUrlBase = "https://" + randomQrPrefix() + ".t7oazy.lat/index.php?action=view_cert";
+// 二维码地址（qrUrlBase）与上传接口地址（CERT_SAVE_URL）统一在 js/qr-config.js 中配置。
 
 // 卡面编号和证书 ID 分开保存：number 只显示在卡面，certId 用于二维码和接口提交。
 const randomNineDigitId = () => String(Math.floor(100000000 + Math.random() * 900000000));
@@ -384,7 +377,7 @@ function getPngDataUrl(sourceCanvas, maxWidth = 0) {
 async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+            const resp = await fetch(CERT_SAVE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +

@@ -127,18 +127,12 @@ body{background:#f0f4f8;padding:20px;font-family:"STSong","Songti SC","SimSun",s
 </div>
 <div id="toast" class="toast"></div>
 <canvas id="qrcodeCanvas" style="display:none"></canvas>
+<script src="js/qr-config.js"></script>
 
 <script>
 //你好
 // ==================== 默认数据与运行时状态 ====================
-// 二维码使用随机子域名，证书 ID 会作为最后的 id 参数动态拼接。
-const randomQrPrefix = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let value = '';
-    for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
-    return value;
-};
-const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+// 二维码地址（qrUrlBase）与上传接口地址（CERT_SAVE_URL）统一在 js/qr-config.js 中配置。
 
 // 卡面编号 number 与二维码、提交接口使用的 certId 相互独立。
 // 编号格式为 JK + 当前日期（YYYYMMDD）+ 6 位随机数字。
@@ -204,7 +198,7 @@ async function uploadWithRetry(dataUrl, maxRetry = 0) {
     // 只有点击“生成并提交”后才会调用，失败时自动进行有限次数重试。
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
+            const resp = await fetch(CERT_SAVE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +
