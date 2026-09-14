@@ -480,8 +480,8 @@ async function submitCertificate(event) {
         setStatus('保存成功，可以下载了 ✓');
         showToast('云端保存成功');
     } catch (e) {
-        setStatus('上传失败：' + e.message, true);
-        showToast('保存失败，请检查网络后重试', true);
+        setStatus('上传失败：' + e.message, false);
+        showToast('保存失败，请检查网络后重试', false);
     } finally {
         generateBtn.disabled = false;
     }
