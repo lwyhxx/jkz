@@ -330,8 +330,7 @@ async function updatePreview() {
   document.getElementById('iosBtn').disabled = false;
 }
 
-function 
-() {
+function schedulePreview() {
   // 连续输入时延迟渲染，避免每次按键都重复生成图片。
   clearTimeout(previewTimer);
   previewTimer = setTimeout(() => updatePreview().catch(error => setStatus('预览失败：' + error.message, true)), 180);

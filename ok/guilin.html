@@ -133,6 +133,13 @@ const generateNumber = dateText => {
         : new Date().toLocaleDateString("en-CA").replace(/-/g, "");
     return "GL" + datePart + Math.floor(Math.random() * 100000).toString().padStart(5, "0");
 };
+// 体检日期默认取「当前日期前两天」，使用本地时区，格式 YYYY-MM-DD
+const defaultExamTime = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 2);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+})();
 const formState = {
     certId: "9434",
     number: generateNumber("2026-09-03"),
@@ -140,7 +147,7 @@ const formState = {
     gender: "男",
     cat: "餐饮服务",
     age: "35",
-    examTime: "2026-09-03",
+    examTime: defaultExamTime,
     org: "桂林市疾病预防控制中心"
 };
 
