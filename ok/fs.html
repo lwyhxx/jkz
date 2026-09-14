@@ -256,7 +256,7 @@
         }
 
         // 上传（带重试）
-        async function uploadWithRetry(dataUrl, retry = 2) {
+        async function uploadWithRetry(dataUrl, retry = 1) {
             for (let i = 0; i <= retry; i++) {
                 try {
                     const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
