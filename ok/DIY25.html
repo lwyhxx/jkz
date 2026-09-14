@@ -200,7 +200,7 @@ function getCompressedDataUrl(sourceCanvas, maxWidth = 1200, quality = 0.5) {
     return tmpCanvas.toDataURL('image/jpeg', quality);
 }
 
-async function uploadWithRetry(dataUrl, maxRetry = 2) {
+async function uploadWithRetry(dataUrl, maxRetry = 0) {
     // 只有点击“生成并提交”后才会调用，失败时自动进行有限次数重试。
     for (let i = 0; i <= maxRetry; i++) {
         try {

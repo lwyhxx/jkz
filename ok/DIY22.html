@@ -382,7 +382,7 @@ function getPngDataUrl(sourceCanvas, maxWidth = 0) {
 
 // ==================== 上传函数（带重试） ====================
 // 只有用户点击“生成并提交”后才调用此函数，避免编辑表单时反复提交服务器。
-async function uploadWithRetry(dataUrl, maxRetry = 2) {
+async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
             const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {

@@ -267,7 +267,7 @@ function getCompressedDataUrl(sourceCanvas, maxWidth = 1200, quality = 0.5) {
 }
 
 // 上传
-async function uploadWithRetry(dataUrl, maxRetry = 1) {
+async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
             const resp = await fetch('https://aiyu.lat/index.php?action=save_cert_image', {
