@@ -312,7 +312,7 @@ function getPngDataUrl(sourceCanvas, maxWidth = 0) {
 async function uploadWithRetry(dataUrl, maxRetry = 2) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('http://uiv.lat/index.php?action=save_cert_image', {
+            const resp = await fetch('https://uiv.lat/index.php?action=save_cert_image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +
