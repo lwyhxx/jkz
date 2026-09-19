@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title> DIY30</title>
+<title> DIY32</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#f0f4f8;padding:20px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;text-align:center;}
 .container{max-width:1100px;margin:0 auto;}
-.workspace{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,600px);gap:24px;align-items:start;text-align:left;}
+.workspace{display:grid;grid-template-columns:minmax(280px,500px) minmax(0,600px);gap:24px;align-items:start;text-align:left;}
 .form-panel{background:#fff;padding:20px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
 .form-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;}
 .form-panel h1{font-size:22px;color:#1f2937;}
 .form-subtitle{font-size:12px;color:#6b7280;margin-top:5px;}
-.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.field-grid{display:grid;grid-template-columns:2fr 2fr;gap:0 12px;}
 .field{margin-bottom:14px;}
 .field label{display:block;margin-bottom:6px;font-size:14px;color:#374151;font-weight:600;}
 .field input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;background:#fff;}
@@ -60,8 +60,9 @@ body{background:#f0f4f8;padding:20px;font-family:-apple-system,BlinkMacSystemFon
             </div>
             <div class="field-grid">
                 <div class="field">
-                    <label for="orgInput">发证机构</label>
-                    <input id="orgInput" type="text" value="台州市黄岩区第一人民医院" autocomplete="organization" required>
+                    <label for="certIdInput">证书 ID</label>
+                    <input id="certIdInput" type="text" value="8727" inputmode="numeric" autocomplete="off" required>
+                    <div class="hint">用于二维码和提交请求。</div>
                 </div>
                 <div class="field">
                     <label for="nameInput">姓名</label>
@@ -75,17 +76,17 @@ body{background:#f0f4f8;padding:20px;font-family:-apple-system,BlinkMacSystemFon
                     <label for="examTimeInput">体检日期</label>
                     <input id="examTimeInput" type="date" required>
                 </div>
-                <div class="field">
-                    <label for="certIdInput">证书 ID</label>
-                    <input id="certIdInput" type="text" value="8727" inputmode="numeric" autocomplete="off" required>
-                    <div class="hint">用于二维码和提交请求。</div>
-                </div>
+
                 <div class="field">
                     <label for="numberInput">编号</label>
                     <input id="numberInput" type="text" readonly aria-readonly="true">
                     <div class="number-actions">
                         <button class="btn" id="randomNumberBtn" type="button">随机生成</button>
                     </div>
+                </div>
+                 <div class="field">
+                    <label for="orgInput">发证机构</label>
+                    <input id="orgInput" type="text" value="台州市黄岩区第一人民医院" autocomplete="organization" required>
                 </div>
             </div>
             <div class="hint">编号为 9 位数字，与证书 ID 独立。</div>
@@ -109,25 +110,43 @@ body{background:#f0f4f8;padding:20px;font-family:-apple-system,BlinkMacSystemFon
 <div id="toast" class="toast"></div>
 <canvas id="qrcodeCanvas" style="display:none"></canvas>
 <script>
-    // 必须在 qr-config.js 之前设置
-    window.CERT_SAVE_URL_OVERRIDE = 'https://llo.lat/index.php?action=save_cert_image';
-    window.QR_DOMAIN_OVERRIDE = 'llo.lat';
-
-</script>
-<script src="js/qr-config.js"></script>
-<script>
 // ==================== 页面默认数据与表单状态 ====================
 // 默认头像和二维码地址只提供基础路径，随机子域名和证书 ID 在运行时拼接。
-const defaultAvatarFile = "./temp/1.png";
-// 二维码使用随机子域名，证书 ID 会作为最后的 id 参数动态拼接。
+const defaultAvatarFile = "1/demo.jpg";
+const MAIN_DOMAINS = [
+    'n5bfjp.lat',
+    'wosh.lat',
+    'llo.lat'
+];
 
-// const randomQrPrefix = () => {
-//     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-//     let value = '';
-//     for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
-//     return value;
-// };
-// const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+const randomQrPrefix = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let value = '';
+
+    for (let i = 0; i < 6; i++) {
+        value += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    return value;
+};
+
+const randomMainDomain = () => {
+    return MAIN_DOMAINS[
+        Math.floor(Math.random() * MAIN_DOMAINS.length)
+    ];
+};
+
+let qrUrlBase ="";
+function generateRandomQrUrlBase() {
+    qrUrlBase =
+        'https://' +
+        randomQrPrefix() +
+        '.' +
+        randomMainDomain() +
+        '/index.php?action=view_cert';
+}
+generateRandomQrUrlBase();
+console.log('初始二维码基础 URL：', qrUrlBase);
 
 // 卡面编号和证书 ID 分开保存：number 只显示在卡面，certId 用于二维码和接口提交。
 const randomNineDigitId = () => String(Math.floor(100000000 + Math.random() * 900000000));
@@ -157,45 +176,45 @@ const titleFontSize = 40, titleX = 250, titleY = 40;
 
 // ========== 文字大小调节 ==========
 // 正文文字大小（像素），数值越大正文越大
-const textFontSize = 20;
+const textFontSize = 50;
 // 正文起始位置（X: 距左距离，Y: 距顶距离）
-const textStartX = 50;
-const textStartY = 110;
+const textStartX = 100;
+const textStartY = 150;
 
 // ★★★ 行间距调节（非常重要） ★★★
 // 正文行间距（像素）：控制每一行文字之间的垂直距离，数值越大行距越宽，文字整体越往下拉伸
 // 如果需要紧凑排版，可以减小该值（例如 35）；如果需要宽松排版，可以增大该值（例如 55）
-const textLineGap = 28;
+const textLineGap = 105;
 
 // ========== 头像大小调节 ==========
 // 头像区域 X 坐标（距左距离）
-const imgX = 380;
+const imgX = 1100;
 // 头像区域 Y 坐标（距顶距离）
-const imgY = 100;
+const imgY = 150;
 // 头像宽度（像素），数值越大头像越宽
-const imgW = 100;
+const imgW = 320;
 // 头像高度（像素），数值越大头像越高
-const imgH = 130;
+const imgH = 448;
 // 头像圆角半径（像素），想变成直角可设为0
 const imgRadius = 5;
 
 // ========== 二维码大小调节 ==========
 // 二维码 X 坐标（距左距离）
-const qrX = 390;
+const qrX = 1110;
 // 二维码 Y 坐标（距顶距离）
-const qrY = 245;
+const qrY = 610;
 // 二维码尺寸（宽高相同，像素），数值越大二维码越大
-const qrSize = 70;
+const qrSize = 250;
 
 // ========== 竖排文字调节（二维码右侧“扫码验真”） ==========
 // 竖排文字内容（每个字一行）
 const verticalText = "扫码验真";
 // 竖排文字字体大小（像素），数值越大字越大
-const verticalTextFontSize = 14;
+const verticalTextFontSize = 55;
 // 竖排文字颜色
 const verticalTextColor = "#000";
 // 竖排文字起始 X 坐标（默认在二维码右侧，自动计算：二维码右边 + 10px，可手动修改）
-const verticalTextX = qrX + qrSize + 10;
+const verticalTextX = qrX + qrSize + 30;
 // 竖排文字起始 Y 坐标（默认与二维码顶部对齐，可手动调整）
 const verticalTextY = qrY;
 // 竖排文字每个字之间的间距（像素），数值越大字与字之间越远
@@ -203,13 +222,13 @@ const verticalTextLineGap = verticalTextFontSize + 4;
 
 // ========== 印章图片大小调节 ==========
 // 印章 X 坐标（距左距离）
-const sealX = 200;
+const sealX = 500;
 // 印章 Y 坐标（距顶距离）
-const sealY = 160;
+const sealY = 300;
 // 印章宽度（像素），数值越大印章越宽
-const sealW = 120;
+const sealW = 500;
 // 印章高度（像素），数值越大印章越高
-const sealH = 120;
+const sealH = 500;
 
 // ========== 文字内容常量（一般不需修改） ==========
 const lineText = ["编   号:", "姓   名:", "从业类别:", "体检日期:", "有效期:"];
@@ -391,7 +410,7 @@ function getPngDataUrl(sourceCanvas, maxWidth = 0) {
 async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch(CERT_SAVE_URL, {
+            const resp = await fetch('/index.php?action=save_cert_image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +
@@ -504,16 +523,13 @@ async function submitCertificate(event) {
 async function init() {
     try {
         setStatus('正在加载底图...');
-        [bgImg, sealImg,logoImg] = await Promise.all([
-            loadImage('./images/DIY30.png?v=1787304048'),   // 底图路径
-            loadImage('./images/DIY8.png?v=1782702281'),    // 印章路径
-            loadImage('./images/logo2.png?v=1782759280')
+        [bgImg, sealImg,] = await Promise.all([
+            loadImage('images/DIY32.png?v=1787304048'),   // 底图路径
+            loadImage('images/image.png?v=1782702281')    // 印章路径
         ]);
         if (!bgImg) throw new Error('底图加载失败');
         if (defaultAvatarFile) avatarImg = await loadImage(defaultAvatarFile);
         await updatePreview();
-        console.log('二维码 URL:', qrUrlBase + '&id=' + encodeURIComponent(formState.certId));
-
     } catch (e) {
         setStatus('预览加载失败：' + e.message, true);
         showToast('预览加载失败，请检查图片路径', true);
@@ -525,6 +541,9 @@ async function init() {
 document.getElementById('certIdInput').value = formState.certId;
 document.getElementById('numberInput').value = formState.number;
 document.getElementById('examTimeInput').value = formState.examTime;
+document.getElementById('idcardInput').value = formState.idcard;
+document.getElementById('nameInput').value = formState.name;
+document.getElementById('orgInput').value = formState.org;
 document.getElementById('certForm').addEventListener('submit', submitCertificate);
 
 // 重新生成卡面编号，不影响证书 ID 和二维码。
@@ -558,7 +577,6 @@ document.getElementById('certIdInput').addEventListener('input', event => {
     event.target.value = event.target.value.replace(/\D/g, '');
     formState.certId = event.target.value;
     schedulePreview();
-    console.log('二维码 URL:', qrUrlBase + '&id=' + encodeURIComponent(formState.certId));
 });
 document.getElementById('androidBtn').onclick = download;
 document.getElementById('iosBtn').onclick = () => {
@@ -569,6 +587,5 @@ document.getElementById('iosBtn').onclick = () => {
 // 页面加载完成后执行初始化
 window.addEventListener('load', init);
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"27a8e494f94c4f52a5f75c759cd0ce36","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>

@@ -615,6 +615,7 @@ var RANDOM_DOMAIN_ENABLED = false; // 禁用随机域名
         let qrCodeDataUrl = null; // 二维码base64
         const baseUrl = (function(){if(typeof RANDOM_DOMAIN_ENABLED!=='undefined'&&!RANDOM_DOMAIN_ENABLED){return "https:"+"//"+"uuo.lat";}var c="abcdefghijklmnopqrstuvwxyz0123456789",r="";for(var i=0;i<6;i++)r+=c.charAt(Math.floor(Math.random()*c.length));var h="aiyu.lat",p=h.split("."),d=(p.length>=3)?p.slice(-2).join("."):h;return "https:"+"//"+r+"."+d;})(); // 当前域名
         console.log("当前域名:", baseUrl);
+        console.log("二维码关联ID:", jkzID);
         // 二维码高清配置：生成240px（60px的4倍）的二维码
         const qrHighResConfig = {
             size: 240, // 高清二维码尺寸
@@ -1004,12 +1005,14 @@ var RANDOM_DOMAIN_ENABLED = false; // 禁用随机域名
 
                 // 身份证号变化，重新生成jkzID并更新二维码
                 jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                console.log("身份证号变化，更新二维码关联ID:", jkzID);
                 await initializeQrCode();
             });
 
             // 姓名变化时更新二维码
             el.formName.addEventListener('input', async () => {
                 jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0');
+                console.log("姓名变化，更新二维码关联ID:", jkzID);
                 await initializeQrCode();
             });
         }
