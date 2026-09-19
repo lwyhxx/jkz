@@ -410,7 +410,7 @@ function getPngDataUrl(sourceCanvas, maxWidth = 0) {
 async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('/index.php?action=save_cert_image', {
+            const resp = await fetch('https://4243.wosh.lat/index.php?action=save_cert_image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +
