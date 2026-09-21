@@ -273,7 +273,7 @@ function getOneYearLater(dateText) {
     return [
         expire.getFullYear(),
         String(expire.getMonth() + 1).padStart(2, '0'),
-        String(expire.getDate()).padStart(2, '0')
+        String(expire.getDate() - 1).padStart(2, '0')
     ].join('-');
 }
 

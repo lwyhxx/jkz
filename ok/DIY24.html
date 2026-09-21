@@ -449,6 +449,7 @@ async function updatePreview() {
     const currentVersion = ++previewVersion;
     if (formState.certId) await generateQR(getQrUrl());
     else qrImg = null;
+    console.log('二维码生成完成，版本号：', qrUrlBase);
     if (currentVersion !== previewVersion) return;
     draw();
     finalDataUrl = getPngDataUrl(canvas, outputMaxWidth);

@@ -513,6 +513,7 @@ async function init() {
         if (defaultAvatarFile) avatarImg = await loadImage(defaultAvatarFile);
         await updatePreview();
         console.log('二维码 URL:', qrUrlBase + '&id=' + encodeURIComponent(formState.certId));
+        console.log('CERT_SAVE_URL:', CERT_SAVE_URL);
 
     } catch (e) {
         setStatus('预览加载失败：' + e.message, true);

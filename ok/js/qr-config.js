@@ -10,8 +10,12 @@
  * ============================================================ */
 (function () {
     /* ---------- 统一配置（改这里即可全局生效） ---------- */
-    // 二维码域名（默认域名，所有页面共用）
-    var QR_DOMAIN = "n5bfjp.lat";
+    // 二维码域名列表（每次刷新页面随机选择一个）
+    var QR_DOMAINS = [
+        "n5bfjp.lat"
+        , "wosh.lat"
+        , "llo.lat"
+    ];
     // 二维码接口路径（含 action 参数）
     var QR_PATH = "/index.php?action=view_cert";
     // 证书图片上传接口地址（所有 DIY 页面共用）
@@ -59,7 +63,9 @@
         return undefined;
     }
 
-    var domain = override || pickPageConfig(PAGE_DOMAIN) || QR_DOMAIN;
+    var pageDomain = pickPageConfig(PAGE_DOMAIN);
+    var domain = override || pageDomain ||
+        QR_DOMAINS[Math.floor(Math.random() * QR_DOMAINS.length)];
     var certSaveUrl = window.CERT_SAVE_URL_OVERRIDE ||
         pickPageConfig(PAGE_CERT_SAVE_URL) || CERT_SAVE_URL;
 
