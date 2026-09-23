@@ -29,7 +29,7 @@
     // 个别页面需要单独使用其他上传接口时，在此按「页面文件名(小写)」配置
     // 没写在这里的页面一律使用上面的通用 CERT_SAVE_URL
     var PAGE_CERT_SAVE_URL = {
-           "diy30.php": "https://434tw.wosh.lat/index.php?action=save_cert_image",
+           "diy30.php": "https://uiv.lat/index.php?action=save_cert_image",
         // 例："111.html": "/index.php?action=save_cert_image",
         // 例："dg3.html": "http://uiv.lat/index.php?action=save_cert_image"
     };
