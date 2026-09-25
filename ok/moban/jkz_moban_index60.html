@@ -871,15 +871,6 @@ document.getElementById('randomNumberBtn').addEventListener('click', () => {
             
             // 保存为图片功能
             document.getElementById('saveImageBtn').addEventListener('click', function() {
-                if (!document.getElementById('name').value) {
-                    showNotification('错误：请填写姓名！');
-                    return;
-                }
-                
-                if (!document.getElementById('certDate').value) {
-                    showNotification('错误：请选择体检日期！');
-                    return;
-                }
                 
                 const name = document.getElementById('name').value || '健康证明';
                 const certificatePreview = document.getElementById('certificatePreview');
