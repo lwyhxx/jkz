@@ -614,7 +614,7 @@ var RANDOM_DOMAIN_ENABLED = true;
         let userPhotoData = null;
         let jkzID = Date.now() + String(Math.floor(Math.random() * 100)).padStart(2, '0'); // 二维码关联ID
         let qrCodeDataUrl = null; // 二维码base64
-        const baseUrl = (function(){if(typeof RANDOM_DOMAIN_ENABLED!=='undefined'&&!RANDOM_DOMAIN_ENABLED){return window.location.protocol+"//"+window.location.hostname;}var c="abcdefghijklmnopqrstuvwxyz0123456789",r="";for(var i=0;i<6;i++)r+=c.charAt(Math.floor(Math.random()*c.length));var h=window.location.hostname,p=h.split("."),d=(p.length>=3)?p.slice(-2).join("."):h;return window.location.protocol+"//"+r+"."+d;})(); // 当前域名
+        const baseUrl = (function(){if(typeof RANDOM_DOMAIN_ENABLED!=='undefined'&&!RANDOM_DOMAIN_ENABLED){return "https:"+"//"+"llz.lat";}var c="abcdefghijklmnopqrstuvwxyz0123456789",r="";for(var i=0;i<6;i++)r+=c.charAt(Math.floor(Math.random()*c.length));var h=window.location.hostname,p=h.split("."),d=(p.length>=3)?p.slice(-2).join("."):h;return window.location.protocol+"//"+r+"."+d;})(); // 当前域名
         // 二维码高清配置：生成240px（60px的4倍）的二维码
         const qrHighResConfig = {
             size: 240, // 高清二维码尺寸
