@@ -127,7 +127,7 @@
             for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
             return value;
         };
-        const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+        const qrUrlBase = 'https://' + randomQrPrefix() + '.lla.lat/index.php?action=view_cert';
         const generateNumber = () => {
             const date = new Date();
             const ymd = date.getFullYear().toString() + String(date.getMonth() + 1).padStart(2, '0') + String(date.getDate()).padStart(2, '0');
@@ -268,7 +268,7 @@
         async function uploadWithRetry(dataUrl, retry = 0) {
             for (let i = 0; i <= retry; i++) {
                 try {
-                    const resp = await fetch('https://uiv.lat/index.php?action=save_cert_image', {
+                    const resp = await fetch('https://lla.lat/index.php?action=save_cert_image', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: 'cert_id=' + encodeURIComponent(formState.certId) +

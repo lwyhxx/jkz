@@ -212,7 +212,7 @@ const randomQrPrefix = () => {
     for (let i = 0; i < 6; i++) value += chars[Math.floor(Math.random() * chars.length)];
     return value;
 };
-const qrUrlBase = 'https://' + randomQrPrefix() + '.t7oazy.lat/index.php?action=view_cert';
+const qrUrlBase = 'https://' + randomQrPrefix() + '.lla.lat/index.php?action=view_cert';
 const generateNumber = dateText => {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateText || '');
     const datePart = match ? match.slice(1).join('') : '';
@@ -270,7 +270,7 @@ function getCompressedDataUrl(sourceCanvas, maxWidth = 1200, quality = 0.5) {
 async function uploadWithRetry(dataUrl, maxRetry = 0) {
     for (let i = 0; i <= maxRetry; i++) {
         try {
-            const resp = await fetch('https://uiv.lat/index.php?action=save_cert_image', {
+            const resp = await fetch('https://lla.lat/index.php?action=save_cert_image', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'cert_id=' + encodeURIComponent(formState.certId) +
